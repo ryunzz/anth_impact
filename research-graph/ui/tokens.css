@@ -1,0 +1,100 @@
+/* tokens.css — import once at the app root. See DESIGN.md for usage rules. */
+
+:root {
+  /* Fonts */
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-sans: "Geist", -apple-system, system-ui, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Plum scale (brand = 700) */
+  --plum-50: #F9F5FD;  --plum-100: #F0E7F9; --plum-200: #E0CFF2;
+  --plum-300: #CBB1E6; --plum-400: #B18CD4; --plum-500: #8F63B6;
+  --plum-600: #6B418D; --plum-700: #4B2867; --plum-800: #371D4B;
+  --plum-900: #251334; --plum-950: #15091E;
+
+  /* Neutrals (tinted with the plum hue) */
+  --neutral-0: #FFFFFF;   --neutral-50: #FBF9FE;  --neutral-100: #F1EFF4;
+  --neutral-200: #DFDDE2; --neutral-300: #C5C3C8; --neutral-400: #A09DA2;
+  --neutral-500: #7B797E; --neutral-600: #5C5A5E; --neutral-700: #434146;
+  --neutral-800: #2C2A2E; --neutral-900: #19171B; --neutral-950: #0E0C10;
+
+  /* Semantic roles: light */
+  --bg: var(--neutral-50);
+  --surface: var(--neutral-0);
+  --raised: var(--neutral-100);
+  --border: var(--neutral-200);
+  --border-input: var(--neutral-300);
+  --text: var(--neutral-950);
+  --muted: var(--neutral-600);
+  --accent: var(--plum-700);
+  --accent-hover: var(--plum-800);
+  --on-accent: var(--neutral-50);
+  --accent-text: var(--plum-700);
+  --accent-soft: var(--plum-100);
+  --accent-soft-text: var(--plum-800);
+  --focus: var(--plum-500);
+  --success: #21763C; --success-soft: #E1F5E4;
+  --warning: #8E5400; --warning-soft: #FCECD9;
+  --danger:  #9C433F; --danger-soft:  #FFE7E4;
+
+  /* Shape, depth, motion */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+  --shadow-float: 0 8px 24px rgb(14 12 16 / 0.16);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 150ms;
+  --dur-panel: 240ms;
+
+  /* Spacing (4px grid) */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px; --space-24: 96px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: var(--neutral-950);
+    --surface: var(--neutral-900);
+    --raised: var(--neutral-800);
+    --border: var(--neutral-700);
+    --border-input: var(--neutral-700);
+    --text: var(--neutral-50);
+    --muted: var(--neutral-400);
+    --accent-text: var(--plum-300);
+    --accent-soft: var(--plum-900);
+    --accent-soft-text: var(--plum-200);
+    --focus: var(--plum-400);
+    --success: #7CCD8E; --success-soft: #12301C;
+    --warning: #E8A95C; --warning-soft: #33230F;
+    --danger:  #FB9890; --danger-soft:  #3A1A18;
+  }
+}
+
+/* Base */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 16px/1.625 var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+code, pre, kbd, samp, .mono { font-family: var(--font-mono); }
+.serif { font-family: var(--font-serif); }
+.eyebrow {
+  font: 500 12px/16px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+a { color: var(--accent-text); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 100ms !important;
+    scroll-behavior: auto !important;
+  }
+}
