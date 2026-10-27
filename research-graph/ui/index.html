@@ -189,7 +189,7 @@ details.src summary { cursor: pointer; color: var(--muted); min-height: 44px; di
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-@keyframes flow { to { stroke-dashoffset: -24; } }
+@keyframes flow { to { stroke-dashoffset: -18; } }
 @keyframes comet { from { stroke-dashoffset: 0.18; opacity: 1; } 85% { opacity: 1; } to { stroke-dashoffset: -1; opacity: 0; } }
 @keyframes flash { 0% { background: transparent; } 30% { background: var(--danger-soft); } 100% { background: transparent; } }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -198,8 +198,10 @@ details.src summary { cursor: pointer; color: var(--muted); min-height: 44px; di
 .col-label.enter { animation: fade 400ms var(--ease) both; animation-delay: var(--d, 0ms); }
 svg.edges .draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 800ms var(--ease) forwards; animation-delay: var(--d, 0ms); }
 svg.edges .fadein { opacity: 0; animation: fade 500ms var(--ease) forwards; animation-delay: var(--d, 0ms); }
-svg.edges .flow { stroke-dasharray: 2 22; animation: flow 1.8s linear infinite; }
-svg.edges .flow.hot { animation-duration: 0.9s; }
+svg.edges .flow { stroke-dasharray: 0 18; animation: flow 1.1s linear infinite; }
+svg.edges .flow.hot { animation-duration: 0.55s; }
+svg.edges .flow.flow-in { opacity: 0; animation: flow 1.1s linear infinite, fade 500ms var(--ease) forwards; animation-delay: 0s, var(--d, 0ms); }
+svg.edges .flow.hot.flow-in { animation-duration: 0.55s, 500ms; }
 svg.edges .comet { stroke-dasharray: 0.18 1.2; stroke-dashoffset: 0.18; opacity: 0; animation: comet 650ms var(--ease) forwards; animation-delay: var(--d, 0ms); }
 .bar i { transition: width 800ms var(--ease), background-color 350ms var(--ease); }
 .claim-pct { transition: color 350ms var(--ease); }
@@ -229,6 +231,7 @@ svg.edges .comet { stroke-dasharray: 0.18 1.2; stroke-dashoffset: 0.18; opacity:
     <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="1.5"/></svg>Methodology</span>
     <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 3"/></svg>Subject</span>
     <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1 3" stroke-linecap="round"/></svg>Citation</span>
+    <span><svg width="26" height="10"><path d="M1 5h22M18 1l5 4-5 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Relied on → relies on</span>
   </div>
   <div class="actions-hd">
     <button type="button" class="btn secondary" id="new-analysis">New analysis</button>
@@ -400,8 +403,8 @@ svg.edges .comet { stroke-dasharray: 0.18 1.2; stroke-dashoffset: 0.18; opacity:
       canvas.appendChild(col);
     });
     if (cascading) ripple(canvas, prev);
-    const edgeDelay = entering ? cols.length * COL_STAGGER : (cascading ? 0 : null);
-    requestAnimationFrame(() => drawEdges(edgeDelay));
+    const edgeDelay = entering ? cols.length * COL_STAGGER : null;
+    requestAnimationFrame(() => drawEdges(edgeDelay, cascading));
   }
 
   function cardHTML(p, delay) {
@@ -431,7 +434,8 @@ svg.edges .comet { stroke-dasharray: 0.18 1.2; stroke-dashoffset: 0.18; opacity:
   // animateFrom: ms before edges start drawing, or null to draw instantly.
   // a redraw (fonts loaded, resize) during an animation continues it rather than skipping it.
   let edgeAnim = { start: 0, end: 0 };
-  function drawEdges(animateFrom = null) {
+  // cascade: send a pulse down each affected edge, timed to the column ripple
+  function drawEdges(animateFrom = null, cascade = false) {
     const now = performance.now();
     if (animateFrom !== null) edgeAnim = { start: now + animateFrom, end: now + animateFrom + 1500 };
     else if (now < edgeAnim.end) animateFrom = Math.max(0, edgeAnim.start - now);
@@ -442,12 +446,22 @@ svg.edges .comet { stroke-dasharray: 0.18 1.2; stroke-dashoffset: 0.18; opacity:
     const sel = ui.selected ? claimByKey(ui.selected) : null;
     const onPath = new Set(sel ? sel.claim.paths.flat() : []);
     const parts = [];
-    const pushPath = (a, b, dash, color, w, op) => {
-      const mx = (a.x + b.x) / 2;
-      const motion = animateFrom === null ? ""
-        : ` class="${dash ? "fadein" : "draw"}" ${dash ? "" : 'pathLength="1"'} style="--d:${Math.round(animateFrom + (a.x / width) * 700)}ms"`;
-      parts.push(`<path d="M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}" fill="none" stroke="${color}" stroke-width="${w}" stroke-opacity="${op}" ${dash ? `stroke-dasharray="${dash}"` : ""} stroke-linecap="round"${motion}/>`);
+    // every edge runs left to right, from what is relied on to what relies on it
+    const pushPath = (a, b, dash, color, w, op, hot, comet) => {
+      const end = { x: b.x - 3, y: b.y };
+      const mx = (a.x + end.x) / 2;
+      const d = `M${a.x},${a.y} C${mx},${a.y} ${mx},${end.y} ${end.x},${end.y}`;
+      const delay = animateFrom === null ? null : Math.round(animateFrom + (a.x / width) * 700);
+      const motion = delay === null ? "" : ` class="${dash ? "fadein" : "draw"}" ${dash ? "" : 'pathLength="1"'} style="--d:${delay}ms"`;
+      parts.push(`<path d="${d}" fill="none" stroke="${color}" stroke-width="${w}" stroke-opacity="${op}" ${dash ? `stroke-dasharray="${dash}"` : ""} stroke-linecap="round"${motion}/>`);
+      const headMotion = delay === null ? "" : ` class="fadein" style="--d:${delay + 600}ms"`;
+      parts.push(`<path d="M${end.x - 6},${end.y - 4} L${end.x},${end.y} L${end.x - 6},${end.y + 4}" fill="none" stroke="${color}" stroke-width="${w}" stroke-opacity="${op}" stroke-linecap="round" stroke-linejoin="round"${headMotion}/>`);
+      if (REDUCED || op < 1) return;
+      const flowIn = delay === null ? "" : ` flow-in" style="--d:${delay + 800}ms`;
+      parts.push(`<path d="${d}" fill="none" stroke="${hot ? color : "var(--accent-text)"}" stroke-width="${hot ? 4.5 : 3.5}" stroke-opacity="${hot ? 1 : 0.55}" stroke-linecap="round" class="flow${hot ? " hot" : ""}${flowIn}"/>`);
+      if (comet !== null) parts.push(`<path d="${d}" pathLength="1" fill="none" stroke="var(--danger)" stroke-width="3.5" stroke-linecap="round" class="comet" style="--d:${comet}ms"/>`);
     };
+    const colOf = el => Number(el.closest(".col")?.dataset.col ?? 0);
     for (const e of snap().edges) {
       const fromCard = canvas.querySelector(`.card[data-paper="${CSS.escape(e.from)}"]`);
       const toCard = canvas.querySelector(`.card[data-paper="${CSS.escape(e.to)}"]`);
@@ -460,7 +474,8 @@ svg.edges .comet { stroke-dasharray: 0.18 1.2; stroke-dashoffset: 0.18; opacity:
         const tc = tk && claimByKey(tk).claim;
         const bad = tc && tc.status !== "ok" && ui.state === "after" && !e.unmapped || (tc && tc.status === "at_risk");
         const color = hot ? "var(--accent-text)" : bad ? `var(--${tc.status === "review_suggested" ? "warning" : "danger"})` : "var(--border-input)";
-        pushPath(anchor(s, "right"), anchor(t, "left"), KIND_DASH[e.kind], color, hot ? 2 : 1.5, sel && !hot ? 0.35 : 1);
+        const comet = cascade && bad ? colOf(s) * RIPPLE : null;
+        pushPath(anchor(s, "right"), anchor(t, "left"), KIND_DASH[e.kind], color, hot ? 2 : 1.5, sel && !hot ? 0.35 : 1, Boolean(hot || bad), comet);
       }
     }
     if (ui.state === "after" && D.challenge.by) {
