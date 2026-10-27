@@ -290,7 +290,7 @@ svg.edges .comet { stroke-dasharray: 0.18 1.2; stroke-dashoffset: 0.18; opacity:
         <button class="btn" type="submit">Analyze</button>
       </form>
       <p class="intake-error" id="intake-error"></p>
-      <div class="examples" id="examples"></div>
+      <div class="recent" id="recent"></div>
     </div>
     <div id="intake-progress" hidden>
       <p class="eyebrow" id="progress-eyebrow">Analyzing</p>
@@ -684,12 +684,23 @@ svg.edges .comet { stroke-dasharray: 0.18 1.2; stroke-dashoffset: 0.18; opacity:
   const STEP_GAP = 520;
   const intake = $("#intake");
   function showIntake(show) {
-    if (show) { intake.hidden = false; intake.classList.remove("leaving"); $("#intake-form").hidden = false; $("#intake-progress").hidden = true; $("#intake-error").textContent = ""; setTimeout(() => $("#link").focus(), 50); return; }
+    if (show) { renderRecent(); intake.hidden = false; intake.classList.remove("leaving"); $("#intake-form").hidden = false; $("#intake-progress").hidden = true; $("#intake-error").textContent = ""; setTimeout(() => $("#link").focus(), 50); return; }
     if (REDUCED) { intake.hidden = true; return; }
     intake.classList.add("leaving");
     setTimeout(() => { intake.hidden = true; intake.classList.remove("leaving"); }, 280);
   }
-  $("#examples").innerHTML = `Or open a saved example: ` + Object.entries(ALL).map(([id, sc]) => `<button type="button" data-open="${id}">${esc(sc.label)}</button>`).join("");
+  function renderRecent() {
+    const rows = Object.entries(ALL).reverse().map(([id, sc]) => {
+      const after = sc.after.papers;
+      const flagged = sc.after.notifications.length;
+      const when = (sc.source.split(" · ")[1]) || "earlier";
+      return `<li><button type="button" data-open="${esc(id)}">
+        <span class="r-title">${esc(sc.label)}</span><span class="r-when">${esc(when)}</span>
+        <span class="r-meta">${after.length} papers · ${esc(sc.source.split(" · ")[0])}${flagged ? ` · <span class="r-flag">${flagged} heads-up</span>` : ""}</span><span></span>
+      </button></li>`;
+    }).join("");
+    $("#recent").innerHTML = `<p class="eyebrow">Recent analyses</p><ul>${rows}</ul>`;
+  }
 
   function stepRow(ev) {
     const mark = ev.status === "running" ? `<span class="mark running"></span>` : `<span class="mark ${ev.status}">${ev.status === "done" ? CHECK : ""}</span>`;
