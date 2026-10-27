@@ -8,7 +8,7 @@ from . import snapshot as lesne
 from .alerts import Subscription, notifications
 from .demo import TEAM_NODE, demo_graph
 from .graph import ResearchGraph
-from .lean_export import derivable, export
+from .lean_export import derivable, export, lean_name
 from .propagation import assess, explain
 
 OUT = Path(__file__).resolve().parent.parent / "ui" / "data.js"
@@ -28,6 +28,7 @@ def snapshot(graph: ResearchGraph, team: str = TEAM_NODE) -> dict:
                 "id": p.id,
                 "title": p.title,
                 "doi": p.doi,
+                "url": f"https://doi.org/{p.doi}" if p.doi else None,
                 "claims": [
                     {
                         "id": c.id,
@@ -38,6 +39,7 @@ def snapshot(graph: ResearchGraph, team: str = TEAM_NODE) -> dict:
                         "roots": sorted(_key(r) for r in results[(p.id, c.id)].roots),
                         "paths": [[_key(k) for k in path] for path in explain(results, (p.id, c.id))],
                         "leanStands": lean_ok[(p.id, c.id)],
+                        "leanName": lean_name((p.id, c.id)),
                     }
                     for c in p.claims
                 ],
@@ -65,6 +67,8 @@ def snapshot(graph: ResearchGraph, team: str = TEAM_NODE) -> dict:
 
 
 def _challenge(graph: ResearchGraph) -> dict:
+    if not graph.challenges:
+        return {"paper": None, "claims": [], "evidence": "No retraction or rebuttal found", "validity": 1.0, "by": None}
     ch = graph.challenges[0]
     by = next((p.id for p in graph.papers.values() if p.doi and p.doi == ch.source), None)
     claims = sorted(ch.claim_ids or graph.papers[ch.paper_id].claim_ids)
@@ -82,18 +86,25 @@ def antibody_scenario() -> dict:
     }
 
 
-def lesne_scenario() -> dict:
-    meta = json.loads(lesne.SNAPSHOT.read_text(encoding="utf-8"))
-    after = lesne.load_snapshot()
+def scenario_from_data(data: dict, label: str | None = None) -> dict:
+    """Viewer scenario for an OpenAlex root paper plus its citing works."""
+    root = data["root"]
+    after = lesne.graph_from_data(data)
+    who = (root["first_author"] or "Unknown").split()[-1]
     return {
-        "label": "Lesné 2006 (Aβ*56)",
-        "source": f"{meta['source']} · {meta['fetched']}",
-        "rootDoi": lesne.ROOT_DOI,
+        "label": label or f"{who} {root['year']}",
+        "source": f"{data['source']} · {data['fetched']}",
+        "rootDoi": (root["doi"] or "").lower(),
         "team": lesne.TEAM_NODE,
         "challenge": _challenge(after),
-        "before": snapshot(lesne.load_snapshot(retracted=False), lesne.TEAM_NODE),
+        "before": snapshot(lesne.graph_from_data(data, retracted=False), lesne.TEAM_NODE),
         "after": snapshot(after, lesne.TEAM_NODE),
     }
+
+
+def lesne_scenario() -> dict:
+    data = json.loads(lesne.SNAPSHOT.read_text(encoding="utf-8"))
+    return scenario_from_data(data, "Lesné 2006 (Aβ*56)")
 
 
 def main() -> None:
