@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research Dependency Graph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<style>
+:root {
+  --bg: #f6f5f1; --surface: #ffffff; --ink: #1b1b19; --muted: #6d6b64; --faint: #a3a19a;
+  --line: #e3e1da; --line-strong: #cfccc3; --hover: #f0eee8;
+  --ok: #3d6b53; --review: #9a6410; --risk: #b0432a; --contested: #8a1f1f;
+  --ok-bg: #e9f0ec; --review-bg: #f6eedf; --risk-bg: #f7e6e1; --contested-bg: #f3e0de;
+  --serif: "Source Serif 4", Georgia, serif;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131312; --surface: #1b1b1a; --ink: #ebe9e3; --muted: #9b998f; --faint: #6a6862;
+    --line: #2b2a27; --line-strong: #3a3935; --hover: #232321;
+    --ok: #82b399; --review: #d9a24b; --risk: #e3805f; --contested: #ec6a62;
+    --ok-bg: #1d2a23; --review-bg: #2d2516; --risk-bg: #2f1d17; --contested-bg: #301917;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131312; --surface: #1b1b1a; --ink: #ebe9e3; --muted: #9b998f; --faint: #6a6862;
+  --line: #2b2a27; --line-strong: #3a3935; --hover: #232321;
+  --ok: #82b399; --review: #d9a24b; --risk: #e3805f; --contested: #ec6a62;
+  --ok-bg: #1d2a23; --review-bg: #2d2516; --risk-bg: #2f1d17; --contested-bg: #301917;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+
+header {
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding: 18px 28px; border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+.brand h1 { font: 600 19px/1 var(--serif); margin: 0; letter-spacing: -0.01em; }
+.brand span { color: var(--muted); font-size: 13px; }
+
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 6px 12px; cursor: pointer; color: var(--muted); font-size: 13px; }
+.seg button + button { border-left: 1px solid var(--line-strong); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+.legend { display: flex; gap: 16px; color: var(--muted); font-size: 12px; align-items: center; }
+.legend svg { vertical-align: middle; margin-right: 6px; }
+
+main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; min-height: calc(100vh - 66px); }
+
+.canvas-wrap { position: relative; overflow: auto; padding: 24px 24px 24px 40px; }
+.canvas { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 220px; column-gap: 48px; align-items: start; width: max-content; }
+.col { display: flex; flex-direction: column; gap: 20px; }
+.col-label { font: 500 11px/1 var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: -6px; }
+svg.edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+
+.card { position: relative; z-index: 1; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.card.team { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.card.evidence { border-style: dashed; border-color: var(--contested); }
+.card-head { padding: 12px 14px 10px; border-bottom: 1px solid var(--line); }
+.card-id { font: 400 11px/1 var(--mono); color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.tag { font: 500 10px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 5px; border-radius: 3px; background: var(--hover); color: var(--ink); }
+.tag.contested { background: var(--contested-bg); color: var(--contested); }
+.card-title { font: 500 14.5px/1.3 var(--serif); margin-top: 7px; }
+
+.claim {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center;
+  width: 100%; text-align: left; border: 0; background: transparent; cursor: pointer;
+  padding: 9px 14px; border-top: 1px solid var(--line);
+}
+.claim:first-of-type { border-top: 0; }
+.claim:hover { background: var(--hover); }
+.claim:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.claim[aria-current="true"] { background: var(--hover); box-shadow: inset 2px 0 0 var(--ink); }
+.claim-text { font-size: 12.5px; color: var(--ink); }
+.claim-pct { font: 500 12px/1 var(--mono); }
+.bar { grid-column: 1 / -1; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.bar i { display: block; height: 100%; }
+.s-ok { color: var(--ok); } .s-review_suggested { color: var(--review); } .s-at_risk { color: var(--risk); } .s-contested { color: var(--contested); }
+.b-ok { background: var(--ok); } .b-review_suggested { background: var(--review); } .b-at_risk { background: var(--risk); } .b-contested { background: var(--contested); }
+.claim.s-contested .claim-text { text-decoration: line-through; text-decoration-color: var(--contested); text-decoration-thickness: 1px; }
+
+aside { border-left: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; min-height: 0; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); padding: 0 20px; gap: 20px; }
+.tabs button { border: 0; background: none; padding: 14px 0 12px; cursor: pointer; color: var(--muted); font-size: 13px; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.tabs .count { font: 500 11px var(--mono); margin-left: 6px; color: var(--risk); }
+.panel { padding: 20px; overflow: auto; flex: 1; }
+.panel[hidden] { display: none; }
+
+.eyebrow { font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); margin: 0 0 10px; }
+.big { font: 600 40px/1 var(--serif); letter-spacing: -0.02em; }
+.status-pill { display: inline-block; font: 500 11px/1 var(--mono); padding: 4px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.p-ok { background: var(--ok-bg); color: var(--ok); } .p-review_suggested { background: var(--review-bg); color: var(--review); }
+.p-at_risk { background: var(--risk-bg); color: var(--risk); } .p-contested { background: var(--contested-bg); color: var(--contested); }
+.detail-title { font: 500 17px/1.35 var(--serif); margin: 6px 0 16px; }
+section.block { border-top: 1px solid var(--line); padding-top: 16px; margin-top: 18px; }
+.path { list-style: none; margin: 0; padding: 0; font: 12px/1.4 var(--mono); }
+.path li { position: relative; padding: 0 0 10px 16px; color: var(--muted); }
+.path li::before { content: ""; position: absolute; left: 3px; top: 6px; width: 5px; height: 5px; border-radius: 50%; background: var(--line-strong); }
+.path li:not(:last-child)::after { content: ""; position: absolute; left: 5px; top: 13px; bottom: 0; width: 1px; background: var(--line-strong); }
+.path li:first-child { color: var(--ink); }
+.path li:last-child { color: var(--contested); }
+.path li:last-child::before { background: var(--contested); }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+.callout { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; font-size: 13px; }
+.callout strong { display: block; font-weight: 600; margin-bottom: 2px; }
+.callout.good strong { color: var(--ok); } .callout.bad strong { color: var(--risk); } .callout.warn strong { color: var(--review); }
+blockquote { margin: 0; padding-left: 12px; border-left: 2px solid var(--line-strong); color: var(--muted); font: italic 13px/1.5 var(--serif); }
+
+.alert { display: block; width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 12px 14px; margin-bottom: 10px; cursor: pointer; }
+.alert:hover { border-color: var(--line-strong); background: var(--hover); }
+.alert-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; }
+.alert-key { font: 500 12px var(--mono); }
+.alert p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.actions { display: flex; gap: 8px; margin-top: 10px; }
+.actions span { font-size: 12px; border: 1px solid var(--line-strong); border-radius: 4px; padding: 3px 8px; color: var(--muted); }
+.empty { color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; }
+
+pre.lean { margin: 0; font: 11.5px/1.55 var(--mono); white-space: pre; overflow: auto; color: var(--ink); }
+pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight: 500; } pre.lean .t { color: var(--review); }
+
+@media (max-width: 900px) {
+  header { padding: 14px 16px; gap: 12px; }
+  .legend { display: none; }
+  main { grid-template-columns: 1fr; }
+  aside { border-left: 0; border-top: 1px solid var(--line); }
+  .canvas-wrap { padding: 16px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><h1>Research dependency graph</h1><span id="subtitle"></span></div>
+  <div class="legend" aria-hidden="true">
+    <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="1.5"/></svg>Methodology</span>
+    <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 3"/></svg>Subject</span>
+    <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1 3" stroke-linecap="round"/></svg>Citation</span>
+  </div>
+  <div class="seg" role="group" aria-label="Scenario">
+    <button type="button" data-state="before">Before</button>
+    <button type="button" data-state="after">After replication</button>
+  </div>
+</header>
+<main>
+  <div class="canvas-wrap" id="wrap">
+    <div class="canvas" id="canvas"><svg class="edges" id="edges"></svg></div>
+  </div>
+  <aside>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="alerts">Alerts<span class="count" id="alert-count"></span></button>
+      <button role="tab" data-tab="detail">Claim</button>
+      <button role="tab" data-tab="lean">Lean</button>
+    </div>
+    <div class="panel" data-panel="alerts" id="alerts"></div>
+    <div class="panel" data-panel="detail" id="detail"></div>
+    <div class="panel" data-panel="lean"><p class="eyebrow">Generated Lean 4</p><p class="note" style="margin-bottom:14px">Each surviving claim gets a theorem proving it holds even assuming the challenged findings are false. Lean checks the derivation, not the biology.</p><pre class="lean" id="lean"></pre></div>
+  </aside>
+</main>
+<script src="data.js"></script>
+<script>
+(() => {
+  const D = window.RDG_DATA;
+  const STATUS_LABEL = { ok: "Stands", review_suggested: "Review suggested", at_risk: "At risk", contested: "Contested" };
+  const KIND_DASH = { methodology: "", subject: "5 3", citation: "1 3" };
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  const store = (() => { try { return window.localStorage; } catch { return null; } })();
+  const saved = (() => { try { return store && store.getItem("rdg.state"); } catch { return null; } })();
+  let ui = { state: saved === "before" ? "before" : "after", tab: "alerts", selected: null };
+
+  const snap = () => D[ui.state];
+  const paperById = () => Object.fromEntries(snap().papers.map(p => [p.id, p]));
+  const claimByKey = key => {
+    const [pid, cid] = key.split("#");
+    const p = paperById()[pid];
+    return p && { paper: p, claim: p.claims.find(c => c.id === cid) };
+  };
+  const visiblePapers = () => snap().papers.filter(p => ui.state === "after" || p.id !== D.challenge.by);
+
+  function depths(papers, edges) {
+    const ids = new Set(papers.map(p => p.id));
+    const memo = {};
+    const depth = id => memo[id] ??= Math.max(0, ...edges.filter(e => e.to === id && ids.has(e.from)).map(e => depth(e.from) + 1));
+    papers.forEach(p => depth(p.id));
+    if (D.challenge.by && memo[D.challenge.by] !== undefined) memo[D.challenge.by] = 0;
+    return memo;
+  }
+
+  function renderCanvas() {
+    const canvas = $("#canvas");
+    [...canvas.querySelectorAll(".col")].forEach(n => n.remove());
+    const papers = visiblePapers();
+    const dep = depths(papers, snap().edges);
+    const cols = [];
+    papers.forEach(p => (cols[dep[p.id]] ??= []).push(p));
+    const LABELS = ["Foundations", "Builds on", "Builds on", "Your work"];
+    cols.forEach((list, i) => {
+      const col = document.createElement("div");
+      col.className = "col";
+      const isLast = i === cols.length - 1;
+      col.innerHTML = `<div class="col-label">${isLast ? "Your work" : (i === 0 ? "Foundations" : "Depth " + i)}</div>` +
+        list.sort((a, b) => (a.id === D.challenge.by) - (b.id === D.challenge.by)).map(cardHTML).join("");
+      canvas.appendChild(col);
+    });
+    requestAnimationFrame(drawEdges);
+  }
+
+  function cardHTML(p) {
+    const team = p.id === D.team, ev = p.id === D.challenge.by;
+    const tag = team ? `<span class="tag">Tracked</span>` : ev ? `<span class="tag contested">Contradicts</span>` : "";
+    return `<article class="card${team ? " team" : ""}${ev ? " evidence" : ""}" data-paper="${esc(p.id)}">
+      <div class="card-head"><div class="card-id"><span>${esc(p.id)}</span>${tag}</div><div class="card-title">${esc(p.title)}</div></div>
+      ${p.claims.map(c => claimHTML(p, c)).join("")}
+    </article>`;
+  }
+
+  function claimHTML(p, c) {
+    const key = `${p.id}#${c.id}`;
+    const pct = Math.round(c.validity * 100);
+    return `<button type="button" class="claim s-${c.status}" data-key="${esc(key)}" aria-current="${ui.selected === key}">
+      <span class="claim-text">${esc(c.text)}</span><span class="claim-pct s-${c.status}">${pct}%</span>
+      <span class="bar"><i class="b-${c.status}" style="width:${pct}%"></i></span>
+    </button>`;
+  }
+
+  function anchor(el, side) {
+    const c = $("#canvas").getBoundingClientRect(), r = el.getBoundingClientRect();
+    return { x: (side === "right" ? r.right : r.left) - c.left, y: r.top + r.height / 2 - c.top };
+  }
+
+  function drawEdges() {
+    const svg = $("#edges"), canvas = $("#canvas");
+    svg.setAttribute("width", canvas.scrollWidth);
+    svg.setAttribute("height", canvas.scrollHeight);
+    const sel = ui.selected ? claimByKey(ui.selected) : null;
+    const onPath = new Set(sel ? sel.claim.paths.flat() : []);
+    const parts = [];
+    const pushPath = (a, b, dash, color, w, op) => {
+      const mx = (a.x + b.x) / 2;
+      parts.push(`<path d="M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}" fill="none" stroke="${color}" stroke-width="${w}" stroke-opacity="${op}" ${dash ? `stroke-dasharray="${dash}"` : ""} stroke-linecap="round"/>`);
+    };
+    for (const e of snap().edges) {
+      const fromCard = canvas.querySelector(`.card[data-paper="${CSS.escape(e.from)}"]`);
+      const toCard = canvas.querySelector(`.card[data-paper="${CSS.escape(e.to)}"]`);
+      if (!fromCard || !toCard) continue;
+      const srcEls = e.sourceClaims.length ? e.sourceClaims.map(id => fromCard.querySelector(`[data-key="${CSS.escape(e.from + "#" + id)}"]`)) : [fromCard.querySelector(".card-head")];
+      const dstEls = e.dependentClaims.length ? e.dependentClaims.map(id => toCard.querySelector(`[data-key="${CSS.escape(e.to + "#" + id)}"]`)) : [toCard.querySelector(".card-head")];
+      for (const s of srcEls) for (const t of dstEls) {
+        const sk = s.dataset.key, tk = t.dataset.key;
+        const hot = sel && sk && tk && onPath.has(sk) && onPath.has(tk);
+        const tc = tk && claimByKey(tk).claim;
+        const bad = tc && tc.status !== "ok" && ui.state === "after" && !e.unmapped || (tc && tc.status === "at_risk");
+        const color = hot ? "var(--ink)" : bad ? `var(--${tc.status === "review_suggested" ? "review" : "risk"})` : "var(--line-strong)";
+        pushPath(anchor(s, "right"), anchor(t, "left"), KIND_DASH[e.kind], color, hot ? 2 : 1.5, sel && !hot ? 0.35 : 1);
+      }
+    }
+    if (ui.state === "after" && D.challenge.by) {
+      const ev = canvas.querySelector(`.card[data-paper="${CSS.escape(D.challenge.by)}"] .claim`);
+      for (const cid of D.challenge.claims) {
+        const t = canvas.querySelector(`[data-key="${CSS.escape(D.challenge.paper + "#" + cid)}"]`);
+        if (ev && t) {
+          const a = anchor(ev, "left"), b = anchor(t, "left");
+          parts.push(`<path d="M${a.x},${a.y} C${a.x - 28},${a.y} ${b.x - 28},${b.y} ${b.x},${b.y}" fill="none" stroke="var(--contested)" stroke-width="1.5"/>`);
+        }
+      }
+    }
+    svg.innerHTML = parts.join("");
+  }
+
+  function renderAlerts() {
+    const notes = snap().notifications;
+    $("#alert-count").textContent = notes.length ? notes.length : "";
+    const team = paperById()[D.team];
+    $("#alerts").innerHTML = `<p class="eyebrow">Tracking · ${esc(team.title)}</p>` + (notes.length
+      ? notes.map(n => `<button type="button" class="alert" data-key="${esc(n.key)}">
+          <div class="alert-top"><span class="alert-key">${esc(n.key)}</span><span class="status-pill p-${n.status}">${STATUS_LABEL[n.status]}</span></div>
+          <p>${esc(claimByKey(n.key).claim.text)}</p>
+          <div class="actions"><span>Continue</span><span>Verified unaffected</span><span>Stop using</span></div>
+        </button>`).join("") +
+        `<p class="note" style="margin-top:14px">Heads-ups, not blocks. Each decision is recorded and the alert only returns if new evidence lowers confidence further.</p>`
+      : `<div class="empty">Nothing your work depends on has been challenged.</div>`);
+  }
+
+  function renderDetail() {
+    const el = $("#detail");
+    if (!ui.selected) { el.innerHTML = `<div class="empty">Select a claim in the graph.</div>`; return; }
+    const { paper, claim } = claimByKey(ui.selected);
+    const pct = Math.round(claim.validity * 100);
+    const edgeIn = snap().edges.filter(e => e.to === paper.id && (!e.dependentClaims.length || e.dependentClaims.includes(claim.id)));
+    const ctx = edgeIn.find(e => e.context);
+    const lean = claim.status === "contested"
+      ? `<div class="callout bad"><strong>Directly challenged</strong>${esc(D.challenge.evidence)}.</div>`
+      : claim.leanStands
+        ? `<div class="callout good"><strong>Proven to stand</strong>A derivation exists that never uses the challenged findings. Lean checks this against the dependency model.</div>`
+        : `<div class="callout bad"><strong>No independent derivation</strong>Every route to this claim passes through a challenged finding.</div>`;
+    el.innerHTML = `
+      <p class="eyebrow">${esc(paper.id)} · ${esc(claim.id)}</p>
+      <div class="detail-title">${esc(claim.text)}</div>
+      <div style="display:flex;align-items:end;gap:14px"><span class="big s-${claim.status}">${pct}%</span><span class="status-pill p-${claim.status}" style="margin-bottom:6px">${STATUS_LABEL[claim.status]}</span></div>
+      <p class="note" style="margin-top:6px">Estimated validity, propagated from upstream evidence.</p>
+      ${claim.paths.length ? `<section class="block"><p class="eyebrow">Why</p>${claim.paths.map(p => `<ol class="path">${p.map(k => `<li>${esc(k)}</li>`).join("")}</ol>`).join("")}</section>` : ""}
+      <section class="block"><p class="eyebrow">Formal check</p>${lean}</section>
+      ${claim.portionCheck ? `<section class="block"><div class="callout warn"><strong>Which part do you rely on?</strong>This dependency isn’t mapped to a specific claim, so the weakest part was assumed. Confirm whether you use the contested portion.</div></section>` : ""}
+      ${ctx ? `<section class="block"><p class="eyebrow">Citing context</p><blockquote>${esc(ctx.context)}</blockquote></section>` : ""}
+      <section class="block"><p class="eyebrow">Depends on</p>${edgeIn.length ? edgeIn.map(e => `<p class="note" style="font-family:var(--mono);font-size:12px">${esc(e.from)}${e.sourceClaims.length ? "#" + esc(e.sourceClaims.join(", ")) : " (unmapped)"} · ${e.kind}</p>`).join("") : `<p class="note">Nothing upstream.</p>`}</section>`;
+  }
+
+  function renderLean() {
+    $("#lean").innerHTML = esc(snap().lean)
+      .replace(/^(--.*)$/gm, '<span class="c">$1</span>')
+      .replace(/(\/-[\s\S]*?-\/)/g, '<span class="c">$1</span>')
+      .replace(/\b(theorem|axiom|namespace|end)\b/g, '<span class="k">$1</span>')
+      .replace(/\bProp\b/g, '<span class="t">Prop</span>');
+  }
+
+  function renderChrome() {
+    document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.state === ui.state));
+    document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === ui.tab));
+    document.querySelectorAll(".panel").forEach(p => p.hidden = p.dataset.panel !== ui.tab);
+    const n = snap().papers.length - (ui.state === "before" && D.challenge.by ? 1 : 0);
+    $("#subtitle").textContent = ui.state === "after" ? `${n} papers · ${D.challenge.evidence}` : `${n} papers · no challenges`;
+  }
+
+  function render() { renderChrome(); renderCanvas(); renderAlerts(); renderDetail(); renderLean(); }
+  const set = patch => { ui = { ...ui, ...patch }; render(); };
+
+  document.addEventListener("click", ev => {
+    const seg = ev.target.closest(".seg button");
+    if (seg) { try { store && store.setItem("rdg.state", seg.dataset.state); } catch {} return set({ state: seg.dataset.state }); }
+    const tab = ev.target.closest(".tabs button");
+    if (tab) return set({ tab: tab.dataset.tab });
+    const hit = ev.target.closest("[data-key].claim, .alert[data-key]");
+    if (hit) return set({ selected: hit.dataset.key, tab: "detail" });
+  });
+  window.addEventListener("resize", () => requestAnimationFrame(drawEdges));
+  if (document.fonts) document.fonts.ready.then(() => requestAnimationFrame(drawEdges));
+  render();
+})();
+</script>
+</body>
+</html>

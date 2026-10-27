@@ -1,0 +1,543 @@
+window.RDG_DATA = {
+ "team": "our-program",
+ "challenge": {
+  "paper": "lee-2021",
+  "claims": [
+   "spec"
+  ],
+  "evidence": "Kim 2025 replication: cross-reactivity with wild-type KRAS",
+  "validity": 0.1,
+  "by": "kim-2025"
+ },
+ "before": {
+  "papers": [
+   {
+    "id": "lee-2021",
+    "title": "mAb-7: a selective antibody against KRAS G12D",
+    "doi": "10.0000/demo.lee2021",
+    "claims": [
+     {
+      "id": "spec",
+      "text": "mAb-7 binds KRAS G12D and not wild-type KRAS",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     },
+     {
+      "id": "aff",
+      "text": "mAb-7 binds G12D with Kd ≈ 4 nM",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     }
+    ]
+   },
+   {
+    "id": "ortiz-2022",
+    "title": "A pull-down assay for mutant KRAS using mAb-7",
+    "doi": null,
+    "claims": [
+     {
+      "id": "protocol",
+      "text": "mAb-7 pull-down isolates G12D-bound complexes",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     }
+    ]
+   },
+   {
+    "id": "chen-2023",
+    "title": "G12D signals through the PX pathway",
+    "doi": null,
+    "claims": [
+     {
+      "id": "mech",
+      "text": "G12D complexes recruit PX adaptor (via mAb-7 pull-down)",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     },
+     {
+      "id": "dose",
+      "text": "PX knockout reduces G12D tumour growth (CRISPR, antibody-free)",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     }
+    ]
+   },
+   {
+    "id": "rao-2024",
+    "title": "Review: targeting mutant KRAS",
+    "doi": null,
+    "claims": [
+     {
+      "id": "summary",
+      "text": "Survey of G12D-selective tools and targets",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     }
+    ]
+   },
+   {
+    "id": "kim-2025",
+    "title": "mAb-7 cross-reacts with wild-type KRAS",
+    "doi": "10.0000/demo.kim2025",
+    "claims": [
+     {
+      "id": "finding",
+      "text": "Independent replication: mAb-7 is not G12D-selective",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     }
+    ]
+   },
+   {
+    "id": "our-program",
+    "title": "Our program: PX inhibition in G12D tumours",
+    "doi": null,
+    "claims": [
+     {
+      "id": "h1",
+      "text": "Inhibiting PX slows G12D tumour growth",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     },
+     {
+      "id": "h2",
+      "text": "mAb-7 staining can stratify G12D patients",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     },
+     {
+      "id": "h3",
+      "text": "PX adaptor binding is the druggable step",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     }
+    ]
+   }
+  ],
+  "edges": [
+   {
+    "from": "lee-2021",
+    "to": "ortiz-2022",
+    "kind": "methodology",
+    "sourceClaims": [
+     "spec"
+    ],
+    "dependentClaims": [],
+    "unmapped": false,
+    "context": "We used the G12D-selective antibody mAb-7 [Lee 2021]."
+   },
+   {
+    "from": "ortiz-2022",
+    "to": "chen-2023",
+    "kind": "methodology",
+    "sourceClaims": [
+     "protocol"
+    ],
+    "dependentClaims": [
+     "mech"
+    ],
+    "unmapped": false,
+    "context": null
+   },
+   {
+    "from": "lee-2021",
+    "to": "rao-2024",
+    "kind": "citation",
+    "sourceClaims": [],
+    "dependentClaims": [],
+    "unmapped": true,
+    "context": null
+   },
+   {
+    "from": "chen-2023",
+    "to": "our-program",
+    "kind": "subject",
+    "sourceClaims": [
+     "dose"
+    ],
+    "dependentClaims": [
+     "h1"
+    ],
+    "unmapped": false,
+    "context": null
+   },
+   {
+    "from": "lee-2021",
+    "to": "our-program",
+    "kind": "methodology",
+    "sourceClaims": [
+     "spec"
+    ],
+    "dependentClaims": [
+     "h2"
+    ],
+    "unmapped": false,
+    "context": null
+   },
+   {
+    "from": "chen-2023",
+    "to": "our-program",
+    "kind": "methodology",
+    "sourceClaims": [
+     "mech"
+    ],
+    "dependentClaims": [
+     "h3"
+    ],
+    "unmapped": false,
+    "context": null
+   },
+   {
+    "from": "rao-2024",
+    "to": "our-program",
+    "kind": "citation",
+    "sourceClaims": [],
+    "dependentClaims": [
+     "h1"
+    ],
+    "unmapped": true,
+    "context": null
+   }
+  ],
+  "notifications": [],
+  "lean": "-- generated by rdg.lean_export; do not edit by hand\nnamespace ResearchGraph\n\n/-- kim-2025#finding: Independent replication: mAb-7 is not G12D-selective -/\naxiom c_kim_2025__finding : Prop\n/-- lee-2021#spec: mAb-7 binds KRAS G12D and not wild-type KRAS -/\naxiom c_lee_2021__spec : Prop\n/-- lee-2021#aff: mAb-7 binds G12D with Kd ≈ 4 nM -/\naxiom c_lee_2021__aff : Prop\n/-- ortiz-2022#protocol: mAb-7 pull-down isolates G12D-bound complexes -/\naxiom c_ortiz_2022__protocol : Prop\n/-- rao-2024#summary: Survey of G12D-selective tools and targets -/\naxiom c_rao_2024__summary : Prop\n/-- chen-2023#mech: G12D complexes recruit PX adaptor (via mAb-7 pull-down) -/\naxiom c_chen_2023__mech : Prop\n/-- chen-2023#dose: PX knockout reduces G12D tumour growth (CRISPR, antibody-free) -/\naxiom c_chen_2023__dose : Prop\n/-- our-program#h1: Inhibiting PX slows G12D tumour growth -/\naxiom c_our_program__h1 : Prop\n/-- our-program#h2: mAb-7 staining can stratify G12D patients -/\naxiom c_our_program__h2 : Prop\n/-- our-program#h3: PX adaptor binding is the druggable step -/\naxiom c_our_program__h3 : Prop\n\n-- established foundations (unchallenged, no logical premises)\naxiom ax_c_kim_2025__finding : c_kim_2025__finding\naxiom ax_c_lee_2021__spec : c_lee_2021__spec\naxiom ax_c_lee_2021__aff : c_lee_2021__aff\naxiom ax_c_rao_2024__summary : c_rao_2024__summary\naxiom ax_c_chen_2023__dose : c_chen_2023__dose\n\n-- dependency premises: if the sources hold, the claim holds\naxiom dep_c_ortiz_2022__protocol : c_lee_2021__spec → c_ortiz_2022__protocol\naxiom dep_c_chen_2023__mech : c_ortiz_2022__protocol → c_chen_2023__mech\naxiom dep_c_our_program__h1 : c_chen_2023__dose → c_our_program__h1\naxiom dep_c_our_program__h2 : c_lee_2021__spec → c_our_program__h2\naxiom dep_c_our_program__h3 : c_chen_2023__mech → c_our_program__h3\n\n-- what still stands, even assuming every challenged finding is false\ntheorem c_kim_2025__finding_stands  : c_kim_2025__finding :=\n  ax_c_kim_2025__finding\ntheorem c_lee_2021__spec_stands  : c_lee_2021__spec :=\n  ax_c_lee_2021__spec\ntheorem c_lee_2021__aff_stands  : c_lee_2021__aff :=\n  ax_c_lee_2021__aff\ntheorem c_ortiz_2022__protocol_stands  : c_ortiz_2022__protocol :=\n  (dep_c_ortiz_2022__protocol ax_c_lee_2021__spec)\ntheorem c_rao_2024__summary_stands  : c_rao_2024__summary :=\n  ax_c_rao_2024__summary\ntheorem c_chen_2023__mech_stands  : c_chen_2023__mech :=\n  (dep_c_chen_2023__mech (dep_c_ortiz_2022__protocol ax_c_lee_2021__spec))\ntheorem c_chen_2023__dose_stands  : c_chen_2023__dose :=\n  ax_c_chen_2023__dose\ntheorem c_our_program__h1_stands  : c_our_program__h1 :=\n  (dep_c_our_program__h1 ax_c_chen_2023__dose)\ntheorem c_our_program__h2_stands  : c_our_program__h2 :=\n  (dep_c_our_program__h2 ax_c_lee_2021__spec)\ntheorem c_our_program__h3_stands  : c_our_program__h3 :=\n  (dep_c_our_program__h3 (dep_c_chen_2023__mech (dep_c_ortiz_2022__protocol ax_c_lee_2021__spec)))\n\nend ResearchGraph\n"
+ },
+ "after": {
+  "papers": [
+   {
+    "id": "lee-2021",
+    "title": "mAb-7: a selective antibody against KRAS G12D",
+    "doi": "10.0000/demo.lee2021",
+    "claims": [
+     {
+      "id": "spec",
+      "text": "mAb-7 binds KRAS G12D and not wild-type KRAS",
+      "validity": 0.1,
+      "status": "contested",
+      "portionCheck": false,
+      "roots": [
+       "lee-2021#spec"
+      ],
+      "paths": [
+       [
+        "lee-2021#spec"
+       ]
+      ],
+      "leanStands": false
+     },
+     {
+      "id": "aff",
+      "text": "mAb-7 binds G12D with Kd ≈ 4 nM",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     }
+    ]
+   },
+   {
+    "id": "ortiz-2022",
+    "title": "A pull-down assay for mutant KRAS using mAb-7",
+    "doi": null,
+    "claims": [
+     {
+      "id": "protocol",
+      "text": "mAb-7 pull-down isolates G12D-bound complexes",
+      "validity": 0.1,
+      "status": "at_risk",
+      "portionCheck": false,
+      "roots": [
+       "lee-2021#spec"
+      ],
+      "paths": [
+       [
+        "ortiz-2022#protocol",
+        "lee-2021#spec"
+       ]
+      ],
+      "leanStands": false
+     }
+    ]
+   },
+   {
+    "id": "chen-2023",
+    "title": "G12D signals through the PX pathway",
+    "doi": null,
+    "claims": [
+     {
+      "id": "mech",
+      "text": "G12D complexes recruit PX adaptor (via mAb-7 pull-down)",
+      "validity": 0.1,
+      "status": "at_risk",
+      "portionCheck": false,
+      "roots": [
+       "lee-2021#spec"
+      ],
+      "paths": [
+       [
+        "chen-2023#mech",
+        "ortiz-2022#protocol",
+        "lee-2021#spec"
+       ]
+      ],
+      "leanStands": false
+     },
+     {
+      "id": "dose",
+      "text": "PX knockout reduces G12D tumour growth (CRISPR, antibody-free)",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     }
+    ]
+   },
+   {
+    "id": "rao-2024",
+    "title": "Review: targeting mutant KRAS",
+    "doi": null,
+    "claims": [
+     {
+      "id": "summary",
+      "text": "Survey of G12D-selective tools and targets",
+      "validity": 0.73,
+      "status": "review_suggested",
+      "portionCheck": true,
+      "roots": [
+       "lee-2021#spec"
+      ],
+      "paths": [
+       [
+        "rao-2024#summary",
+        "lee-2021#spec"
+       ]
+      ],
+      "leanStands": true
+     }
+    ]
+   },
+   {
+    "id": "kim-2025",
+    "title": "mAb-7 cross-reacts with wild-type KRAS",
+    "doi": "10.0000/demo.kim2025",
+    "claims": [
+     {
+      "id": "finding",
+      "text": "Independent replication: mAb-7 is not G12D-selective",
+      "validity": 1.0,
+      "status": "ok",
+      "portionCheck": false,
+      "roots": [],
+      "paths": [],
+      "leanStands": true
+     }
+    ]
+   },
+   {
+    "id": "our-program",
+    "title": "Our program: PX inhibition in G12D tumours",
+    "doi": null,
+    "claims": [
+     {
+      "id": "h1",
+      "text": "Inhibiting PX slows G12D tumour growth",
+      "validity": 0.919,
+      "status": "ok",
+      "portionCheck": true,
+      "roots": [
+       "lee-2021#spec"
+      ],
+      "paths": [
+       [
+        "our-program#h1",
+        "rao-2024#summary",
+        "lee-2021#spec"
+       ]
+      ],
+      "leanStands": true
+     },
+     {
+      "id": "h2",
+      "text": "mAb-7 staining can stratify G12D patients",
+      "validity": 0.1,
+      "status": "at_risk",
+      "portionCheck": false,
+      "roots": [
+       "lee-2021#spec"
+      ],
+      "paths": [
+       [
+        "our-program#h2",
+        "lee-2021#spec"
+       ]
+      ],
+      "leanStands": false
+     },
+     {
+      "id": "h3",
+      "text": "PX adaptor binding is the druggable step",
+      "validity": 0.1,
+      "status": "at_risk",
+      "portionCheck": false,
+      "roots": [
+       "lee-2021#spec"
+      ],
+      "paths": [
+       [
+        "our-program#h3",
+        "chen-2023#mech",
+        "ortiz-2022#protocol",
+        "lee-2021#spec"
+       ]
+      ],
+      "leanStands": false
+     }
+    ]
+   }
+  ],
+  "edges": [
+   {
+    "from": "lee-2021",
+    "to": "ortiz-2022",
+    "kind": "methodology",
+    "sourceClaims": [
+     "spec"
+    ],
+    "dependentClaims": [],
+    "unmapped": false,
+    "context": "We used the G12D-selective antibody mAb-7 [Lee 2021]."
+   },
+   {
+    "from": "ortiz-2022",
+    "to": "chen-2023",
+    "kind": "methodology",
+    "sourceClaims": [
+     "protocol"
+    ],
+    "dependentClaims": [
+     "mech"
+    ],
+    "unmapped": false,
+    "context": null
+   },
+   {
+    "from": "lee-2021",
+    "to": "rao-2024",
+    "kind": "citation",
+    "sourceClaims": [],
+    "dependentClaims": [],
+    "unmapped": true,
+    "context": null
+   },
+   {
+    "from": "chen-2023",
+    "to": "our-program",
+    "kind": "subject",
+    "sourceClaims": [
+     "dose"
+    ],
+    "dependentClaims": [
+     "h1"
+    ],
+    "unmapped": false,
+    "context": null
+   },
+   {
+    "from": "lee-2021",
+    "to": "our-program",
+    "kind": "methodology",
+    "sourceClaims": [
+     "spec"
+    ],
+    "dependentClaims": [
+     "h2"
+    ],
+    "unmapped": false,
+    "context": null
+   },
+   {
+    "from": "chen-2023",
+    "to": "our-program",
+    "kind": "methodology",
+    "sourceClaims": [
+     "mech"
+    ],
+    "dependentClaims": [
+     "h3"
+    ],
+    "unmapped": false,
+    "context": null
+   },
+   {
+    "from": "rao-2024",
+    "to": "our-program",
+    "kind": "citation",
+    "sourceClaims": [],
+    "dependentClaims": [
+     "h1"
+    ],
+    "unmapped": true,
+    "context": null
+   }
+  ],
+  "notifications": [
+   {
+    "key": "our-program#h2",
+    "status": "at_risk",
+    "validity": 0.1,
+    "message": "Heads-up on our-program#h2: estimated validity 10% (at_risk). Traced to challenged finding(s): lee-2021#spec. This is guidance, not a verdict. You decide whether to keep building on it."
+   },
+   {
+    "key": "our-program#h3",
+    "status": "at_risk",
+    "validity": 0.1,
+    "message": "Heads-up on our-program#h3: estimated validity 10% (at_risk). Traced to challenged finding(s): lee-2021#spec. This is guidance, not a verdict. You decide whether to keep building on it."
+   }
+  ],
+  "lean": "-- generated by rdg.lean_export; do not edit by hand\nnamespace ResearchGraph\n\n/-- kim-2025#finding: Independent replication: mAb-7 is not G12D-selective -/\naxiom c_kim_2025__finding : Prop\n/-- lee-2021#spec: mAb-7 binds KRAS G12D and not wild-type KRAS -/\naxiom c_lee_2021__spec : Prop\n/-- lee-2021#aff: mAb-7 binds G12D with Kd ≈ 4 nM -/\naxiom c_lee_2021__aff : Prop\n/-- ortiz-2022#protocol: mAb-7 pull-down isolates G12D-bound complexes -/\naxiom c_ortiz_2022__protocol : Prop\n/-- rao-2024#summary: Survey of G12D-selective tools and targets -/\naxiom c_rao_2024__summary : Prop\n/-- chen-2023#mech: G12D complexes recruit PX adaptor (via mAb-7 pull-down) -/\naxiom c_chen_2023__mech : Prop\n/-- chen-2023#dose: PX knockout reduces G12D tumour growth (CRISPR, antibody-free) -/\naxiom c_chen_2023__dose : Prop\n/-- our-program#h1: Inhibiting PX slows G12D tumour growth -/\naxiom c_our_program__h1 : Prop\n/-- our-program#h2: mAb-7 staining can stratify G12D patients -/\naxiom c_our_program__h2 : Prop\n/-- our-program#h3: PX adaptor binding is the druggable step -/\naxiom c_our_program__h3 : Prop\n\n-- established foundations (unchallenged, no logical premises)\naxiom ax_c_kim_2025__finding : c_kim_2025__finding\naxiom ax_c_lee_2021__aff : c_lee_2021__aff\naxiom ax_c_rao_2024__summary : c_rao_2024__summary\naxiom ax_c_chen_2023__dose : c_chen_2023__dose\n\n-- dependency premises: if the sources hold, the claim holds\naxiom dep_c_ortiz_2022__protocol : c_lee_2021__spec → c_ortiz_2022__protocol\naxiom dep_c_chen_2023__mech : c_ortiz_2022__protocol → c_chen_2023__mech\naxiom dep_c_our_program__h1 : c_chen_2023__dose → c_our_program__h1\naxiom dep_c_our_program__h2 : c_lee_2021__spec → c_our_program__h2\naxiom dep_c_our_program__h3 : c_chen_2023__mech → c_our_program__h3\n\n-- what still stands, even assuming every challenged finding is false\ntheorem c_kim_2025__finding_stands (_h0 : ¬ c_lee_2021__spec) : c_kim_2025__finding :=\n  ax_c_kim_2025__finding\n-- c_lee_2021__spec: directly challenged\ntheorem c_lee_2021__aff_stands (_h0 : ¬ c_lee_2021__spec) : c_lee_2021__aff :=\n  ax_c_lee_2021__aff\n-- c_ortiz_2022__protocol: no derivation avoids the challenged findings\ntheorem c_rao_2024__summary_stands (_h0 : ¬ c_lee_2021__spec) : c_rao_2024__summary :=\n  ax_c_rao_2024__summary\n-- c_chen_2023__mech: no derivation avoids the challenged findings\ntheorem c_chen_2023__dose_stands (_h0 : ¬ c_lee_2021__spec) : c_chen_2023__dose :=\n  ax_c_chen_2023__dose\ntheorem c_our_program__h1_stands (_h0 : ¬ c_lee_2021__spec) : c_our_program__h1 :=\n  (dep_c_our_program__h1 ax_c_chen_2023__dose)\n-- c_our_program__h2: no derivation avoids the challenged findings\n-- c_our_program__h3: no derivation avoids the challenged findings\n\nend ResearchGraph\n"
+ }
+};
