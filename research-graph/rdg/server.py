@@ -7,10 +7,12 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import sys
 from collections.abc import Mapping
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from types import MappingProxyType
 from typing import Any, ClassVar
 
@@ -20,6 +22,7 @@ from .export_ui import OUT, antibody_scenario, lesne_scenario
 log = logging.getLogger(__name__)
 
 UI_DIR = OUT.parent
+ENV_FILE = UI_DIR.parent / ".env"  # gitignored; holds ANTHROPIC_API_KEY
 MAX_BODY = 200_000
 DEFAULT_PORT = 8766
 
@@ -59,8 +62,24 @@ class Handler(SimpleHTTPRequestHandler):
         self.wfile.write(data)
 
 
+def read_env_file(path: Path) -> dict[str, str]:
+    """KEY=VALUE lines from a local .env; blank lines and # comments are skipped."""
+    if not path.is_file():
+        return {}
+    pairs: dict[str, str] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        pairs[key.strip()] = value.strip().strip("'\"")
+    return pairs
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
+    for key, value in read_env_file(ENV_FILE).items():
+        os.environ.setdefault(key, value)  # a real environment variable wins
     port = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_PORT
     Handler.scenarios = MappingProxyType(load_scenarios())
     server = ThreadingHTTPServer(("127.0.0.1", port), partial(Handler, directory=str(UI_DIR)))

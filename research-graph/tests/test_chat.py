@@ -73,3 +73,12 @@ def test_missing_credentials_becomes_clear_error():
     with pytest.raises(ChatError) as err:
         reply(parse_request(body(), SCENARIOS), SCENARIOS, NoKey())
     assert err.value.status == 503 and "ANTHROPIC_API_KEY" in str(err.value)
+
+
+def test_read_env_file(tmp_path):
+    from rdg.server import read_env_file
+
+    env = tmp_path / ".env"
+    env.write_text("# comment\n\nANTHROPIC_API_KEY='abc'\nnot a pair\nOTHER = x=y\n")
+    assert read_env_file(env) == {"ANTHROPIC_API_KEY": "abc", "OTHER": "x=y"}
+    assert read_env_file(tmp_path / "missing") == {}
