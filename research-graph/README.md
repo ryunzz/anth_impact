@@ -35,4 +35,3 @@ These are first guesses, not calibrated values.
   404. Set `S2_API_KEY` (free) for a reliable rate limit. OpenAlex responds fine.
 - Real citation data can contain cycles (papers that cite each other's preprints). These
   are currently rejected with `CycleError`.
-- The generated Lean has not been compiled yet.

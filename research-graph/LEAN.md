@@ -20,12 +20,11 @@ That is a machine-checkable statement: *h1 holds even assuming the antibody spec
 finding is false.* h2 and h3 get no theorem, because every route to them goes through
 the contested claim.
 
-**Status:** the generated file has **not been compiled**. Installing Lean (`elan`) was
-blocked in this session. To check it:
+**Status:** compiled with Lean 4 for both the antibody example and the Lesné 2006
+snapshot, with no errors. To re-check:
 
 ```
-curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh
-python -c "from rdg.demo import demo_graph; from rdg.lean_export import export; open('Demo.lean','w').write(export(demo_graph()))"
+python -c "from rdg.demo import demo_graph; from rdg.lean_export import export; print(export(demo_graph()))" > Demo.lean
 lean Demo.lean
 ```
 
