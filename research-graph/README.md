@@ -19,7 +19,8 @@ python3 -m http.server 8765 --directory ui
 | `alerts.py` | Subscriptions (a team's hypothesis is a node), heads-up messages, decisions that silence repeats until new evidence arrives |
 | `importer.py` | Semantic Scholar references → edges (citation intents → kind) + OpenAlex retraction flags → challenges |
 | `lean_export.py` | Lean 4 file proving which claims still stand without the challenged findings (see `LEAN.md`) |
-| `ui/` | Static viewer: before/after toggle, alerts, claim detail, generated Lean |
+| `snapshot.py` | Offline dataset: Lesné et al. 2006 (retracted 2024) and its 10 most-cited citing works from OpenAlex, refreshed with `python -m rdg.snapshot` |
+| `ui/` | Static viewer: dataset switcher, DOI loader, before/after toggle, alerts, claim detail, generated Lean |
 
 **Partial invalidation.** Challenges target claims, not whole papers. If an edge says
 *which* claim it relies on, only that claim matters. If it doesn't ("unmapped"), the
