@@ -91,7 +91,7 @@ def import_references(doi: str, fetch: Fetch = http_get_json, limit: int = 100) 
             f"?fields=title,externalIds,intents,contexts,isInfluential&limit={limit}"
         )
     except urllib.error.HTTPError as exc:
-        if exc.code not in (404, 429):
+        if exc.code not in (401, 403, 404, 429):  # bad key, unknown paper or rate limit
             raise
         log.warning("semantic scholar unavailable for %s (%s); using openalex", doi, exc.code)
         return _openalex_references(doi, fetch, limit)
