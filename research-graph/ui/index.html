@@ -146,6 +146,24 @@ pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight
 .suggest { display: flex; flex-direction: column; gap: 6px; }
 .suggest button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 8px 10px; font-size: 12.5px; color: var(--muted); cursor: pointer; }
 .suggest button:hover { background: var(--hover); color: var(--ink); }
+/* motion */
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes flash { 0% { background: transparent; } 30% { background: var(--risk-bg); } 100% { background: transparent; } }
+.card.enter { animation: rise 460ms cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--d, 0ms); }
+.col-label.enter { animation: fade 400ms ease both; animation-delay: var(--d, 0ms); }
+svg.edges path.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 700ms cubic-bezier(.3,.6,.2,1) forwards; animation-delay: var(--d, 0ms); }
+svg.edges path.fadein { opacity: 0; animation: fade 500ms ease forwards; animation-delay: var(--d, 0ms); }
+.bar i { transition: width 750ms cubic-bezier(.2,.7,.2,1), background-color 350ms ease; }
+.claim-pct { transition: color 350ms ease; }
+.claim.flash { animation: flash 900ms ease; }
+.alert.enter, .msg.enter { animation: rise 320ms cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--d, 0ms); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  svg.edges path.draw { stroke-dashoffset: 0; }
+  svg.edges path.fadein { opacity: 1; }
+}
 @media (max-width: 900px) {
   header { padding: 14px 16px; gap: 12px; }
   .legend { display: none; }
@@ -228,8 +246,58 @@ pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight
     return memo;
   }
 
+  const REDUCED = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } })();
+  const COL_STAGGER = 110, ROW_STAGGER = 45, RIPPLE = 260;
+  let shown = { scenario: null, state: null };
+
+  function snapshotBars(canvas) {
+    const prev = {};
+    canvas.querySelectorAll(".claim[data-key]").forEach(el => {
+      const bar = el.querySelector(".bar i");
+      prev[el.dataset.key] = { width: bar.style.width, barClass: bar.className, rowClass: el.className, pct: el.querySelector(".claim-pct").textContent };
+    });
+    return prev;
+  }
+
+  function countUp(el, from, to, delay) {
+    const start = performance.now() + delay, dur = 750;
+    const tick = now => {
+      const t = Math.min(1, Math.max(0, (now - start) / dur));
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(from + (to - from) * eased) + "%";
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  // replay the change column by column so the invalidation visibly ripples downstream
+  function ripple(canvas, prev) {
+    canvas.querySelectorAll(".claim[data-key]").forEach(el => {
+      const before = prev[el.dataset.key];
+      const bar = el.querySelector(".bar i");
+      if (!before || before.width === bar.style.width) return;
+      const delay = Number(el.closest(".col").dataset.col) * RIPPLE;
+      const target = { width: bar.style.width, barClass: bar.className, rowClass: el.className };
+      const pctEl = el.querySelector(".claim-pct");
+      bar.style.transition = "none";
+      bar.style.width = before.width; bar.className = before.barClass; el.className = before.rowClass;
+      pctEl.textContent = before.pct;
+      void bar.offsetWidth;
+      bar.style.transition = "";
+      setTimeout(() => {
+        bar.style.width = target.width; bar.className = target.barClass; el.className = target.rowClass;
+        if (parseInt(target.width) < parseInt(before.width)) el.classList.add("flash");
+      }, delay);
+      countUp(pctEl, parseInt(before.pct), parseInt(target.width), delay);
+    });
+  }
+
   function renderCanvas() {
     const canvas = $("#canvas");
+    const prev = snapshotBars(canvas);
+    const entering = !REDUCED && shown.scenario !== ui.scenario;
+    const cascading = !REDUCED && !entering && shown.state !== ui.state;
+    shown = { scenario: ui.scenario, state: ui.state };
     [...canvas.querySelectorAll(".col")].forEach(n => n.remove());
     const papers = visiblePapers();
     const dep = depths(papers, snap().edges);
@@ -238,18 +306,24 @@ pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight
     cols.forEach((list, i) => {
       const col = document.createElement("div");
       col.className = "col";
+      col.dataset.col = i;
       const isLast = i === cols.length - 1;
-      col.innerHTML = `<div class="col-label">${isLast ? "Your work" : (i === 0 ? "Foundations" : "Depth " + i)}</div>` +
-        list.sort((a, b) => (a.id === D.challenge.by) - (b.id === D.challenge.by)).map(cardHTML).join("");
+      const label = isLast ? "Your work" : (i === 0 ? "Foundations" : "Depth " + i);
+      const sorted = list.sort((a, b) => (a.id === D.challenge.by) - (b.id === D.challenge.by));
+      col.innerHTML = `<div class="col-label${entering ? " enter" : ""}" style="--d:${i * COL_STAGGER}ms">${label}</div>` +
+        sorted.map((p, row) => cardHTML(p, entering ? i * COL_STAGGER + row * ROW_STAGGER : null)).join("");
       canvas.appendChild(col);
     });
-    requestAnimationFrame(drawEdges);
+    if (cascading) ripple(canvas, prev);
+    const edgeDelay = entering ? cols.length * COL_STAGGER : (cascading ? 0 : null);
+    requestAnimationFrame(() => drawEdges(edgeDelay));
   }
 
-  function cardHTML(p) {
+  function cardHTML(p, delay) {
     const team = p.id === D.team, ev = p.id === D.challenge.by;
     const tag = team ? `<span class="tag">Tracked</span>` : ev ? `<span class="tag contested">Contradicts</span>` : "";
-    return `<article class="card${team ? " team" : ""}${ev ? " evidence" : ""}" data-paper="${esc(p.id)}">
+    const motion = delay === null ? "" : ` enter" style="--d:${delay}ms`;
+    return `<article class="card${team ? " team" : ""}${ev ? " evidence" : ""}${motion}" data-paper="${esc(p.id)}">
       <div class="card-head"><div class="card-id"><span>${esc(p.id)}</span>${tag}</div><div class="card-title">${esc(p.title)}</div></div>
       ${p.claims.map(c => claimHTML(p, c)).join("")}
     </article>`;
@@ -269,8 +343,15 @@ pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight
     return { x: (side === "right" ? r.right : r.left) - c.left, y: r.top + r.height / 2 - c.top };
   }
 
-  function drawEdges() {
+  // animateFrom: ms before edges start drawing, or null to draw instantly.
+  // a redraw (fonts loaded, resize) during an animation continues it rather than skipping it.
+  let edgeAnim = { start: 0, end: 0 };
+  function drawEdges(animateFrom = null) {
+    const now = performance.now();
+    if (animateFrom !== null) edgeAnim = { start: now + animateFrom, end: now + animateFrom + 1500 };
+    else if (now < edgeAnim.end) animateFrom = Math.max(0, edgeAnim.start - now);
     const svg = $("#edges"), canvas = $("#canvas");
+    const width = Math.max(1, canvas.scrollWidth);
     svg.setAttribute("width", canvas.scrollWidth);
     svg.setAttribute("height", canvas.scrollHeight);
     const sel = ui.selected ? claimByKey(ui.selected) : null;
@@ -278,7 +359,9 @@ pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight
     const parts = [];
     const pushPath = (a, b, dash, color, w, op) => {
       const mx = (a.x + b.x) / 2;
-      parts.push(`<path d="M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}" fill="none" stroke="${color}" stroke-width="${w}" stroke-opacity="${op}" ${dash ? `stroke-dasharray="${dash}"` : ""} stroke-linecap="round"/>`);
+      const motion = animateFrom === null ? ""
+        : ` class="${dash ? "fadein" : "draw"}" ${dash ? "" : 'pathLength="1"'} style="--d:${Math.round(animateFrom + (a.x / width) * 700)}ms"`;
+      parts.push(`<path d="M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}" fill="none" stroke="${color}" stroke-width="${w}" stroke-opacity="${op}" ${dash ? `stroke-dasharray="${dash}"` : ""} stroke-linecap="round"${motion}/>`);
     };
     for (const e of snap().edges) {
       const fromCard = canvas.querySelector(`.card[data-paper="${CSS.escape(e.from)}"]`);
@@ -308,12 +391,18 @@ pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight
     svg.innerHTML = parts.join("");
   }
 
+  let alertsShown = null;
   function renderAlerts() {
+    const key = ui.scenario + ":" + ui.state;
+    const alertsFresh = !REDUCED && alertsShown !== key;
+    // land the alerts after the cascade reaches the team's column
+    const alertsDelay = alertsShown && alertsShown.split(":")[0] === ui.scenario ? ($("#canvas .col:last-child")?.dataset.col ?? 0) * RIPPLE + 400 : 300;
+    alertsShown = key;
     const notes = snap().notifications;
     $("#alert-count").textContent = notes.length ? notes.length : "";
     const team = paperById()[D.team];
     $("#alerts").innerHTML = `<p class="eyebrow">Tracking · ${esc(team.title)}</p>` + (notes.length
-      ? notes.map(n => `<button type="button" class="alert" data-key="${esc(n.key)}">
+      ? notes.map((n, i) => `<button type="button" class="alert${alertsFresh ? " enter" : ""}" style="--d:${alertsDelay + i * 90}ms" data-key="${esc(n.key)}">
           <div class="alert-top"><span class="alert-key">${esc(n.key)}</span><span class="status-pill p-${n.status}">${STATUS_LABEL[n.status]}</span></div>
           <p>${esc(claimByKey(n.key).claim.text)}</p>
           <div class="actions"><span>Continue</span><span>Verified unaffected</span><span>Stop using</span></div>
@@ -370,7 +459,7 @@ pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight
     const log = chats[ui.scenario] ??= [];
     const el = $("#chat-log");
     el.innerHTML = log.length
-      ? log.map(m => `<div class="msg ${m.role}">${esc(m.content)}</div>`).join("") + (chatBusy ? `<div class="msg pending">Thinking…</div>` : "")
+      ? log.map((m, i) => `<div class="msg ${m.role}${i === log.length - 1 && !REDUCED ? " enter" : ""}">${esc(m.content)}</div>`).join("") + (chatBusy ? `<div class="msg pending">Thinking…</div>` : "")
       : `<p class="eyebrow">Ask about ${esc(D.label)}</p><div class="suggest">${SUGGESTIONS.map(q => `<button type="button" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>`;
     el.scrollTop = el.scrollHeight;
     $("#chat-send").disabled = chatBusy;
@@ -426,8 +515,8 @@ pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight
     if (hit) { $("#doi-msg").textContent = ""; set({ scenario: hit[0], state: "before", selected: null, tab: "alerts" }); }
     else $("#doi-msg").textContent = doi ? "Not in the local dataset. Import it with rdg.snapshot." : "";
   });
-  window.addEventListener("resize", () => requestAnimationFrame(drawEdges));
-  if (document.fonts) document.fonts.ready.then(() => requestAnimationFrame(drawEdges));
+  window.addEventListener("resize", () => requestAnimationFrame(() => drawEdges()));
+  if (document.fonts) document.fonts.ready.then(() => requestAnimationFrame(() => drawEdges()));
   render();
 })();
 </script>
