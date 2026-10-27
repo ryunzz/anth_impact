@@ -49,3 +49,40 @@ def test_import_references_with_fake_api():
     assert [c.paper_id for c in res.challenges] == ["doi:10.1/retracted"]
     assert len(res.skipped) == 1
     assert all(d.is_unmapped for d in res.dependencies)
+
+
+def test_import_falls_back_to_openalex_when_s2_withholds_references():
+    def fetch(url):
+        if "semanticscholar" in url and "/references" in url:
+            return {"data": None}
+        if "semanticscholar" in url:
+            return {"title": "Root", "externalIds": {"DOI": "10.1/root"}}
+        if "select=title,referenced_works" in url:
+            return {"title": "Root", "referenced_works": ["https://openalex.org/W1", "https://openalex.org/W2"]}
+        if "filter=openalex" in url:
+            return {"results": [
+                {"id": "https://openalex.org/W1", "title": "One", "doi": "https://doi.org/10.1/one"},
+                {"id": "https://openalex.org/W2", "title": "Two", "doi": None},
+            ]}
+        return {"is_retracted": False}
+
+    res = import_references("10.1/root", fetch=fetch)
+    assert {d.source_paper for d in res.dependencies} == {"doi:10.1/one", "W2"}
+    assert all(d.kind is K.CITATION for d in res.dependencies)
+
+
+def test_import_uses_openalex_when_s2_rate_limits():
+    import urllib.error
+
+    def fetch(url):
+        if "semanticscholar" in url:
+            raise urllib.error.HTTPError(url, 429, "Too Many Requests", {}, None)
+        if "select=title,referenced_works" in url:
+            return {"title": "Root", "referenced_works": ["https://openalex.org/W1"]}
+        if "filter=openalex" in url:
+            return {"results": [{"id": "https://openalex.org/W1", "title": "One", "doi": None}]}
+        return {"is_retracted": False}
+
+    res = import_references("10.1/root", fetch=fetch)
+    assert [p.title for p in res.papers] == ["Root", "One"]
+    assert [d.source_paper for d in res.dependencies] == ["W1"]
