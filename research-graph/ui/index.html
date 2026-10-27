@@ -130,6 +130,22 @@ blockquote { margin: 0; padding-left: 12px; border-left: 2px solid var(--line-st
 pre.lean { margin: 0; font: 11.5px/1.55 var(--mono); white-space: pre; overflow: auto; color: var(--ink); }
 pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight: 500; } pre.lean .t { color: var(--review); }
 
+.panel.chat { display: flex; flex-direction: column; padding: 0; }
+.panel.chat[hidden] { display: none; }
+.chat-log { flex: 1; overflow: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.msg { font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+.msg.user { align-self: flex-end; max-width: 85%; background: var(--hover); border: 1px solid var(--line); border-radius: 8px; padding: 8px 11px; }
+.msg.assistant { color: var(--ink); }
+.msg.error { color: var(--risk); font-size: 12px; }
+.msg.pending { color: var(--faint); font: 12px var(--mono); }
+.chat-form { display: flex; gap: 8px; padding: 12px 20px 16px; border-top: 1px solid var(--line); }
+.chat-form textarea { flex: 1; resize: none; font: 13px/1.4 var(--sans); color: var(--ink); background: var(--bg); border: 1px solid var(--line-strong); border-radius: 6px; padding: 8px 10px; }
+.chat-form textarea:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
+.chat-form button { border: 0; border-radius: 6px; background: var(--ink); color: var(--bg); padding: 0 14px; font-size: 13px; cursor: pointer; }
+.chat-form button:disabled { opacity: .5; cursor: default; }
+.suggest { display: flex; flex-direction: column; gap: 6px; }
+.suggest button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 8px 10px; font-size: 12.5px; color: var(--muted); cursor: pointer; }
+.suggest button:hover { background: var(--hover); color: var(--ink); }
 @media (max-width: 900px) {
   header { padding: 14px 16px; gap: 12px; }
   .legend { display: none; }
@@ -165,10 +181,18 @@ pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight
       <button role="tab" data-tab="alerts">Alerts<span class="count" id="alert-count"></span></button>
       <button role="tab" data-tab="detail">Claim</button>
       <button role="tab" data-tab="lean">Lean</button>
+      <button role="tab" data-tab="ask">Ask</button>
     </div>
     <div class="panel" data-panel="alerts" id="alerts"></div>
     <div class="panel" data-panel="detail" id="detail"></div>
     <div class="panel" data-panel="lean"><p class="eyebrow">Generated Lean 4</p><p class="note" style="margin-bottom:14px">Each surviving claim gets a theorem proving it holds even assuming the challenged findings are false. Lean checks the derivation, not the biology.</p><pre class="lean" id="lean"></pre></div>
+    <div class="panel chat" data-panel="ask">
+      <div class="chat-log" id="chat-log" aria-live="polite"></div>
+      <form class="chat-form" id="chat-form">
+        <textarea id="chat-input" rows="2" placeholder="Ask about this graph…" aria-label="Message"></textarea>
+        <button type="submit" id="chat-send">Send</button>
+      </form>
+    </div>
   </aside>
 </main>
 <script src="data.js"></script>
@@ -339,7 +363,41 @@ pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight
     $("#scenarios").innerHTML = Object.entries(ALL).map(([id, sc]) => `<button type="button" data-scenario="${id}" aria-pressed="${id === ui.scenario}">${esc(sc.label)}</button>`).join("");
   }
 
-  function render() { D = ALL[ui.scenario]; renderChrome(); renderCanvas(); renderAlerts(); renderDetail(); renderLean(); }
+  const chats = {};
+  let chatBusy = false;
+  const SUGGESTIONS = ["What in our program is affected, and why?", "Which of our hypotheses still stand, and how sure is that?", "What should we check before our next experiment?"];
+  function renderChat() {
+    const log = chats[ui.scenario] ??= [];
+    const el = $("#chat-log");
+    el.innerHTML = log.length
+      ? log.map(m => `<div class="msg ${m.role}">${esc(m.content)}</div>`).join("") + (chatBusy ? `<div class="msg pending">Thinking…</div>` : "")
+      : `<p class="eyebrow">Ask about ${esc(D.label)}</p><div class="suggest">${SUGGESTIONS.map(q => `<button type="button" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>`;
+    el.scrollTop = el.scrollHeight;
+    $("#chat-send").disabled = chatBusy;
+  }
+  async function sendChat(text) {
+    const content = text.trim();
+    if (!content || chatBusy) return;
+    const scenario = ui.scenario;
+    const log = chats[scenario] ??= [];
+    log.push({ role: "user", content });
+    chatBusy = true; renderChat();
+    const fail = msg => { log[log.length - 1] = { ...log[log.length - 1], failed: true }; log.push({ role: "error", content: msg }); };
+    try {
+      const history = log.filter(m => m.role !== "error" && !m.failed).map(({ role, content }) => ({ role, content }));
+      const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenario, state: ui.state, selected: ui.selected, messages: history }) });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.reply) log.push({ role: "assistant", content: data.reply });
+      else fail(data.error || "Chat needs the local server: python -m rdg.server");
+    } catch {
+      fail("Chat needs the local server: python -m rdg.server");
+    } finally {
+      chatBusy = false; renderChat();
+    }
+  }
+
+  function render() { D = ALL[ui.scenario]; renderChrome(); renderChat(); renderCanvas(); renderAlerts(); renderDetail(); renderLean(); }
   const set = patch => { ui = { ...ui, ...patch }; render(); };
 
   document.addEventListener("click", ev => {
@@ -349,8 +407,17 @@ pre.lean .c { color: var(--faint); } pre.lean .k { color: var(--ok); font-weight
     if (sc) { $("#doi-msg").textContent = ""; return set({ scenario: sc.dataset.scenario, selected: null, tab: "alerts" }); }
     const tab = ev.target.closest(".tabs button");
     if (tab) return set({ tab: tab.dataset.tab });
+    const ask = ev.target.closest("[data-ask]");
+    if (ask) return sendChat(ask.dataset.ask);
     const hit = ev.target.closest("[data-key].claim, .alert[data-key]");
     if (hit) return set({ selected: hit.dataset.key, tab: "detail" });
+  });
+  $("#chat-form").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const input = $("#chat-input"); const text = input.value; input.value = ""; sendChat(text);
+  });
+  $("#chat-input").addEventListener("keydown", ev => {
+    if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); $("#chat-form").requestSubmit(); }
   });
   $("#doi-form").addEventListener("submit", ev => {
     ev.preventDefault();
