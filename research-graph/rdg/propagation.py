@@ -2,7 +2,8 @@
 
 For each claim, in topological order:
 
-    validity = base * prod over supporting source claims s of (1 - w * (1 - validity(s)))
+    validity = prod over challenged roots r of (strongest single-path factor from r)
+    factor along an edge = 1 - w * (1 - validity_wrt_r(source))
 
 `base` is the lowest validity any direct challenge assigns that claim (1.0 if none).
 `w` is the edge weight (methodology > subject > citation). A disproven methodology
@@ -11,8 +12,10 @@ only drops it to 0.7. Scores are guidance, never verdicts.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from enum import Enum
+from types import MappingProxyType
 
 from .graph import ResearchGraph
 from .models import Dependency, DependencyKind
@@ -50,6 +53,7 @@ class Assessment:
     status: Status
     causes: tuple[Cause, ...]
     roots: frozenset[ClaimKey]  # the directly challenged claims behind this score
+    by_root: Mapping[ClaimKey, float] = field(default_factory=lambda: MappingProxyType({}))
 
     @property
     def needs_portion_check(self) -> bool:
@@ -107,9 +111,10 @@ def _assess_claim(
     incoming: tuple[Dependency, ...],
     results: dict[ClaimKey, Assessment],
 ) -> Assessment:
-    validity = base
+    # each challenged root counts once, through its strongest path, so a claim that
+    # reaches the same root via many citations isn't penalised once per path
+    by_root: dict[ClaimKey, float] = {key: base} if base < 1.0 else {}
     causes: list[Cause] = []
-    roots: set[ClaimKey] = {key} if base < 1.0 else set()
     for dep in incoming:
         if dep.dependent_claims and key[1] not in dep.dependent_claims:
             continue
@@ -118,16 +123,20 @@ def _assess_claim(
             factor = 1.0 - dep.effective_weight * (1.0 - upstream.validity)
             if factor >= 1.0 - NEGLIGIBLE:
                 continue
-            validity *= factor
-            roots |= upstream.roots
             causes.append(Cause(src, dep.kind, upstream.validity, factor, dep.is_unmapped))
+            for root, v in upstream.by_root.items():
+                by_root[root] = min(by_root.get(root, 1.0), 1.0 - dep.effective_weight * (1.0 - v))
+    validity = 1.0
+    for v in by_root.values():
+        validity *= v
     return Assessment(
         key=key,
         validity=validity,
         base_validity=base,
         status=classify(validity, base < 1.0),
         causes=tuple(causes),
-        roots=frozenset(roots),
+        roots=frozenset(by_root),
+        by_root=MappingProxyType(by_root),
     )
 
 
