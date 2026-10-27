@@ -164,6 +164,71 @@ svg.edges path.fadein { opacity: 0; animation: fade 500ms ease forwards; animati
   svg.edges path.draw { stroke-dashoffset: 0; }
   svg.edges path.fadein { opacity: 1; }
 }
+
+/* intake */
+.intake { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: grid; place-items: center; padding: 24px 16px; overflow: auto; }
+.intake[hidden] { display: none; }
+.intake.leaving { animation: fade 280ms ease reverse forwards; }
+.intake-inner { width: min(640px, 100%); }
+.intake h2 { font: 600 clamp(28px, 4.4vw, 40px)/1.12 var(--serif); letter-spacing: -0.02em; margin: 10px 0 12px; }
+.intake .lede { color: var(--muted); font-size: 15px; margin: 0 0 28px; max-width: 52ch; }
+.drop { display: block; border: 1.5px dashed var(--line-strong); border-radius: 10px; background: var(--surface); padding: 34px 24px; text-align: center; transition: border-color 160ms ease, background 160ms ease, transform 160ms ease; cursor: pointer; }
+.drop.over { border-color: var(--ink); background: var(--hover); transform: scale(1.01); }
+.drop strong { display: block; font: 500 16px var(--serif); margin-bottom: 4px; }
+.drop span { color: var(--muted); font-size: 13px; }
+.or { display: flex; align-items: center; gap: 12px; color: var(--faint); font: 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; margin: 18px 0; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.link-row { display: flex; gap: 8px; }
+.link-row input { flex: 1; min-width: 0; font: 13px var(--mono); color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 6px; padding: 10px 12px; }
+.link-row input:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
+.btn { border: 1px solid var(--ink); background: var(--ink); color: var(--bg); border-radius: 6px; padding: 9px 16px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+.btn:disabled { opacity: .45; cursor: default; }
+.examples { margin-top: 22px; font-size: 12.5px; color: var(--muted); display: flex; gap: 6px 14px; flex-wrap: wrap; }
+.examples button { border: 0; background: none; padding: 0; color: var(--ink); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; cursor: pointer; font-size: 12.5px; }
+.intake-error { color: var(--risk); font-size: 13px; margin-top: 12px; min-height: 1em; }
+
+.progress-title { font: 500 18px/1.35 var(--serif); margin: 6px 0 22px; min-height: 1.35em; }
+.steps { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.steps li { display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: start; padding: 13px 0; border-bottom: 1px solid var(--line); animation: rise 280ms cubic-bezier(.2,.7,.2,1) both; }
+.steps .label { font-size: 14px; }
+.steps .detail { grid-column: 2 / -1; font: 12px/1.45 var(--mono); color: var(--muted); margin-top: -6px; word-break: break-word; }
+.steps .time { font: 11px var(--mono); color: var(--faint); }
+.mark { width: 16px; height: 16px; margin-top: 2px; border-radius: 50%; display: grid; place-items: center; }
+.mark.running { border: 1.5px solid var(--line-strong); border-top-color: var(--ink); animation: spin 700ms linear infinite; }
+.mark.done { background: var(--ok); }
+.mark.warn { background: var(--review); }
+.mark.error { background: var(--risk); }
+.mark svg { width: 10px; height: 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.bar-track { height: 2px; background: var(--line); border-radius: 2px; overflow: hidden; margin: 0 0 18px; }
+.bar-track i { display: block; height: 100%; width: 0; background: var(--ink); transition: width 400ms ease; }
+
+/* header actions */
+.actions-hd { display: flex; gap: 8px; align-items: center; }
+.btn.run { background: var(--risk); border-color: var(--risk); color: #fff; }
+.btn.run[hidden] { display: none; }
+.card-title a { color: inherit; text-decoration: none; }
+.card-title a:hover { text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+
+/* verification */
+.console { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; font: 12px/1.6 var(--mono); color: var(--muted); margin: 14px 0 18px; min-height: 64px; }
+.console .ok { color: var(--ok); } .console .bad { color: var(--risk); } .console .cmd { color: var(--ink); }
+.thm { border: 1px solid var(--line); border-radius: 6px; padding: 11px 13px; margin-bottom: 8px; animation: rise 300ms cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--d, 0ms); }
+.thm-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.thm-key { font: 500 12px var(--mono); }
+.thm-state { font: 500 10.5px var(--mono); text-transform: uppercase; letter-spacing: .05em; }
+.thm-text { font-size: 12.5px; color: var(--muted); margin: 4px 0 0; }
+.uses { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.uses span { font: 11px var(--mono); padding: 2px 6px; border-radius: 3px; background: var(--hover); color: var(--muted); }
+.uses span.not { background: var(--ok-bg); color: var(--ok); }
+details.src { margin-top: 18px; }
+details.src summary { cursor: pointer; font-size: 12.5px; color: var(--muted); }
+
+/* chat markdown */
+.msg.assistant strong { font-weight: 600; }
+.msg.assistant code { font: 11.5px var(--mono); background: var(--hover); padding: 1px 4px; border-radius: 3px; }
+.msg.assistant ul { margin: 4px 0; padding-left: 18px; }
 @media (max-width: 900px) {
   header { padding: 14px 16px; gap: 12px; }
   .legend { display: none; }
@@ -181,9 +246,10 @@ svg.edges path.fadein { opacity: 0; animation: fade 500ms ease forwards; animati
     <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 3"/></svg>Subject</span>
     <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1 3" stroke-linecap="round"/></svg>Citation</span>
   </div>
-  <form class="doi" id="doi-form" autocomplete="off">
-    <input id="doi" type="text" placeholder="Load a DOI" aria-label="DOI" spellcheck="false">
-  </form>
+  <div class="actions-hd">
+    <button type="button" class="btn run" id="run-analysis" hidden>Run analysis</button>
+    <button type="button" class="btn ghost" id="new-analysis">New analysis</button>
+  </div>
   <div class="seg" role="group" aria-label="Dataset" id="scenarios"></div>
   <div class="seg" role="group" aria-label="State">
     <button type="button" data-state="before">Before</button>
@@ -198,12 +264,19 @@ svg.edges path.fadein { opacity: 0; animation: fade 500ms ease forwards; animati
     <div class="tabs" role="tablist">
       <button role="tab" data-tab="alerts">Alerts<span class="count" id="alert-count"></span></button>
       <button role="tab" data-tab="detail">Claim</button>
-      <button role="tab" data-tab="lean">Lean</button>
+      <button role="tab" data-tab="lean">Proof</button>
       <button role="tab" data-tab="ask">Ask</button>
     </div>
     <div class="panel" data-panel="alerts" id="alerts"></div>
     <div class="panel" data-panel="detail" id="detail"></div>
-    <div class="panel" data-panel="lean"><p class="eyebrow">Generated Lean 4</p><p class="note" style="margin-bottom:14px">Each surviving claim gets a theorem proving it holds even assuming the challenged findings are false. Lean checks the derivation, not the biology.</p><pre class="lean" id="lean"></pre></div>
+    <div class="panel" data-panel="lean">
+      <p class="eyebrow">Formal verification · Lean 4</p>
+      <p class="note">Each claim that survives gets a theorem: it holds even assuming the challenged findings are false. Lean checks the derivation against the dependency model, not the biology.</p>
+      <div class="console" id="console"></div>
+      <button type="button" class="btn" id="verify-btn">Verify with Lean</button>
+      <div id="theorems" style="margin-top:16px"></div>
+      <details class="src"><summary>Show generated Lean source</summary><pre class="lean" id="lean" style="margin-top:10px"></pre></details>
+    </div>
     <div class="panel chat" data-panel="ask">
       <div class="chat-log" id="chat-log" aria-live="polite"></div>
       <form class="chat-form" id="chat-form">
@@ -213,6 +286,34 @@ svg.edges path.fadein { opacity: 0; animation: fade 500ms ease forwards; animati
     </div>
   </aside>
 </main>
+<section class="intake" id="intake" aria-label="Start an analysis">
+  <div class="intake-inner">
+    <div id="intake-form">
+      <p class="eyebrow">Research dependency graph</p>
+      <h2>What is your research built on?</h2>
+      <p class="lede">Drop the paper you're building on. We map the work around it, score how much of it still holds, and prove what a retraction can't touch.</p>
+      <label class="drop" id="drop" tabindex="0">
+        <strong>Drop a paper here</strong>
+        <span>PDF or citation file (.bib, .ris), or click to choose</span>
+        <input type="file" id="file" accept=".pdf,.bib,.ris,.txt,application/pdf" hidden>
+      </label>
+      <div class="or">or</div>
+      <form class="link-row" id="link-form" autocomplete="off">
+        <input id="link" type="text" placeholder="Paste a DOI or link, e.g. doi.org/10.1038/nature04533" spellcheck="false" aria-label="DOI or link">
+        <button class="btn" type="submit">Analyze</button>
+      </form>
+      <p class="intake-error" id="intake-error"></p>
+      <div class="examples" id="examples"></div>
+    </div>
+    <div id="intake-progress" hidden>
+      <p class="eyebrow" id="progress-eyebrow">Analyzing</p>
+      <div class="progress-title" id="progress-title"></div>
+      <div class="bar-track"><i id="progress-bar"></i></div>
+      <ol class="steps" id="steps"></ol>
+      <p class="intake-error" id="progress-error"></p>
+    </div>
+  </div>
+</section>
 <script src="data.js"></script>
 <script>
 (() => {
@@ -324,7 +425,7 @@ svg.edges path.fadein { opacity: 0; animation: fade 500ms ease forwards; animati
     const tag = team ? `<span class="tag">Tracked</span>` : ev ? `<span class="tag contested">Contradicts</span>` : "";
     const motion = delay === null ? "" : ` enter" style="--d:${delay}ms`;
     return `<article class="card${team ? " team" : ""}${ev ? " evidence" : ""}${motion}" data-paper="${esc(p.id)}">
-      <div class="card-head"><div class="card-id"><span>${esc(p.id)}</span>${tag}</div><div class="card-title">${esc(p.title)}</div></div>
+      <div class="card-head"><div class="card-id"><span>${esc(p.id)}</span>${tag}</div><div class="card-title">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>` : esc(p.title)}</div></div>
       ${p.claims.map(c => claimHTML(p, c)).join("")}
     </article>`;
   }
@@ -449,6 +550,7 @@ svg.edges path.fadein { opacity: 0; animation: fade 500ms ease forwards; animati
     document.querySelectorAll(".panel").forEach(p => p.hidden = p.dataset.panel !== ui.tab);
     const n = snap().papers.length - (ui.state === "before" && D.challenge.by ? 1 : 0);
     $("#subtitle").textContent = `${D.source} · ${n} papers · ` + (ui.state === "after" ? D.challenge.evidence : "no challenges");
+    $("#run-analysis").hidden = !(ui.state === "before" && D.challenge.paper);
     $("#scenarios").innerHTML = Object.entries(ALL).map(([id, sc]) => `<button type="button" data-scenario="${id}" aria-pressed="${id === ui.scenario}">${esc(sc.label)}</button>`).join("");
   }
 
@@ -459,7 +561,7 @@ svg.edges path.fadein { opacity: 0; animation: fade 500ms ease forwards; animati
     const log = chats[ui.scenario] ??= [];
     const el = $("#chat-log");
     el.innerHTML = log.length
-      ? log.map((m, i) => `<div class="msg ${m.role}${i === log.length - 1 && !REDUCED ? " enter" : ""}">${esc(m.content)}</div>`).join("") + (chatBusy ? `<div class="msg pending">Thinking…</div>` : "")
+      ? log.map((m, i) => `<div class="msg ${m.role}${i === log.length - 1 && !REDUCED ? " enter" : ""}">${m.role === "assistant" ? md(m.content) : esc(m.content)}</div>`).join("") + (chatBusy ? `<div class="msg pending">Thinking…</div>` : "")
       : `<p class="eyebrow">Ask about ${esc(D.label)}</p><div class="suggest">${SUGGESTIONS.map(q => `<button type="button" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>`;
     el.scrollTop = el.scrollHeight;
     $("#chat-send").disabled = chatBusy;
@@ -486,18 +588,217 @@ svg.edges path.fadein { opacity: 0; animation: fade 500ms ease forwards; animati
     }
   }
 
-  function render() { D = ALL[ui.scenario]; renderChrome(); renderChat(); renderCanvas(); renderAlerts(); renderDetail(); renderLean(); }
+
+  // ---------- chat markdown (assistant replies only; input is escaped first) ----------
+  function md(text) {
+    const lines = esc(text).split("\n");
+    const out = []; let list = false;
+    for (const line of lines) {
+      const item = line.match(/^\s*[-*]\s+(.*)$/);
+      if (item && !list) { out.push("<ul>"); list = true; }
+      if (!item && list) { out.push("</ul>"); list = false; }
+      const body = (item ? item[1] : line)
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/`([^`]+)`/g, "<code>$1</code>");
+      out.push(item ? `<li>${body}</li>` : body + "\n");
+    }
+    if (list) out.push("</ul>");
+    return out.join("").trim();
+  }
+
+  // ---------- proof / verification ----------
+  const verifyResults = {};
+  let verifying = false;
+  const CHECK = '<svg viewBox="0 0 10 10"><path d="M2 5.2l2 2 4-4.4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function claimText(key) { const c = claimByKey(key); return c ? c.claim.text : ""; }
+
+  function renderVerify() {
+    const res = verifyResults[ui.scenario];
+    const con = $("#console");
+    $("#verify-btn").disabled = verifying;
+    $("#verify-btn").textContent = res ? "Verify again" : "Verify with Lean";
+    if (verifying) return;
+    if (!res) { con.innerHTML = `<span class="cmd">$ lean ResearchGraph.lean</span><br>ready`; $("#theorems").innerHTML = ""; return; }
+    const status = res.error
+      ? `<span class="bad">${esc(res.error)}</span>`
+      : res.ok ? `<span class="ok">✓ exit 0 · ${res.theorems.length} theorems checked in ${res.seconds}s</span><br>${esc(res.version || "")}`
+               : `<span class="bad">✗ exit ${res.exitCode}</span><br>${esc((res.errors || []).join("\n"))}`;
+    con.innerHTML = `<span class="cmd">$ lean ResearchGraph.lean</span><br>${status}`;
+    const roots = res.challenged || [];
+    const rootLabel = roots.map(esc).join(", ") || "the challenged finding";
+    const order = k => (k.startsWith(D.team + "#") ? 0 : 1);
+    const proven = [...res.theorems].sort((a, b) => order(a.claim) - order(b.claim));
+    const rows = [
+      ...proven.map(t => ({ key: t.claim, state: "proven", uses: t.uses })),
+      ...(res.noDerivation || []).map(k => ({ key: k, state: "none" })),
+      ...roots.map(k => ({ key: k, state: "challenged" })),
+    ].sort((a, b) => order(a.key) - order(b.key));
+    $("#theorems").innerHTML = rows.map((r, i) => {
+      const head = r.state === "proven" ? `<span class="thm-state s-ok">Proven to stand</span>`
+        : r.state === "none" ? `<span class="thm-state s-at_risk">No derivation</span>`
+        : `<span class="thm-state s-contested">Challenged</span>`;
+      const uses = r.state === "proven"
+        ? `<div class="uses">${r.uses.filter(u => u.role === "established").map(u => `<span>rests on ${esc(u.key)}</span>`).join("")}<span class="not">never uses ${rootLabel}</span></div>`
+        : r.state === "none" ? `<div class="uses"><span>every route passes through ${rootLabel}</span></div>` : "";
+      return `<div class="thm" style="--d:${REDUCED ? 0 : i * 110}ms"><div class="thm-top"><span class="thm-key">${esc(r.key)}</span>${head}</div><p class="thm-text">${esc(claimText(r.key))}</p>${uses}</div>`;
+    }).join("");
+  }
+
+  function offlineVerify() {
+    const all = snap().papers.flatMap(p => p.claims.map(c => ({ key: `${p.id}#${c.id}`, c })));
+    return {
+      error: "Local server not running: showing the derivation check without running Lean.",
+      theorems: all.filter(x => x.c.leanStands).map(x => ({ claim: x.key, uses: [] })),
+      noDerivation: all.filter(x => !x.c.leanStands && x.c.status !== "contested").map(x => x.key),
+      challenged: all.filter(x => x.c.status === "contested").map(x => x.key),
+    };
+  }
+
+  async function runVerify() {
+    if (verifying) return;
+    const scenario = ui.scenario;
+    verifying = true; renderVerify();
+    const con = $("#console");
+    const n = snap().papers.reduce((a, p) => a + p.claims.length, 0);
+    const lines = [`<span class="cmd">$ lean ResearchGraph.lean</span>`, `elaborating ${n} claims as propositions…`, `checking derivations that avoid ${esc((D.challenge.paper || "challenged") + "")}…`];
+    con.innerHTML = "";
+    lines.forEach((l, i) => setTimeout(() => { if (verifying) con.innerHTML += (i ? "<br>" : "") + l; }, REDUCED ? 0 : i * 350));
+    const started = performance.now();
+    let res;
+    try {
+      const r = await fetch("/api/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scenario }) });
+      res = r.ok ? await r.json() : offlineVerify();
+    } catch { res = offlineVerify(); }
+    const wait = Math.max(0, (REDUCED ? 0 : 1100) - (performance.now() - started));
+    setTimeout(() => { verifyResults[scenario] = res; verifying = false; if (ui.scenario === scenario) renderVerify(); }, wait);
+  }
+
+  // ---------- run analysis (the cascade, then the proof) ----------
+  function runAnalysis() {
+    set({ state: "after", selected: null, tab: "alerts" });
+    const cols = $("#canvas").querySelectorAll(".col").length;
+    setTimeout(() => { set({ tab: "lean" }); runVerify(); }, REDUCED ? 0 : cols * RIPPLE + 1600);
+  }
+
+  // ---------- intake: drop a paper, watch it build ----------
+  const STEP_GAP = 520;
+  const intake = $("#intake");
+  function showIntake(show) {
+    if (show) { intake.hidden = false; intake.classList.remove("leaving"); $("#intake-form").hidden = false; $("#intake-progress").hidden = true; $("#intake-error").textContent = ""; setTimeout(() => $("#link").focus(), 50); return; }
+    if (REDUCED) { intake.hidden = true; return; }
+    intake.classList.add("leaving");
+    setTimeout(() => { intake.hidden = true; intake.classList.remove("leaving"); }, 280);
+  }
+  $("#examples").innerHTML = `Or open a saved example: ` + Object.entries(ALL).map(([id, sc]) => `<button type="button" data-open="${id}">${esc(sc.label)}</button>`).join("");
+
+  function stepRow(ev) {
+    const mark = ev.status === "running" ? `<span class="mark running"></span>` : `<span class="mark ${ev.status}">${ev.status === "done" ? CHECK : ""}</span>`;
+    return `${mark}<span class="label">${esc(ev.label)}</span><span class="time"></span>${ev.detail ? `<span class="detail">${esc(ev.detail)}</span>` : ""}`;
+  }
+
+  async function runImport(request, label) {
+    $("#intake-form").hidden = true; $("#intake-progress").hidden = false;
+    $("#progress-title").textContent = label; $("#steps").innerHTML = ""; $("#progress-error").textContent = "";
+    $("#progress-bar").style.width = "4%";
+    const queue = []; let done = false, result = null, failed = null;
+    const started = performance.now();
+    const pump = async () => {
+      let shown = 0;
+      while (!done || queue.length) {
+        const ev = queue.shift();
+        if (!ev) { await new Promise(r => setTimeout(r, 60)); continue; }
+        if (ev.type === "step") {
+          let li = $(`#steps li[data-id="${CSS.escape(ev.id)}"]`);
+          if (!li) { li = document.createElement("li"); li.dataset.id = ev.id; $("#steps").appendChild(li); }
+          li.innerHTML = stepRow(ev);
+          if (ev.status !== "running") { li.querySelector(".time").textContent = ((performance.now() - started) / 1000).toFixed(1) + "s"; shown++; }
+          if (ev.id === "paper" && ev.status === "done") $("#progress-title").textContent = ev.detail.split(" · ")[0];
+          $("#progress-bar").style.width = Math.min(92, 8 + shown * 15) + "%";
+        }
+        await new Promise(r => setTimeout(r, REDUCED ? 0 : (ev.status === "running" ? 260 : STEP_GAP)));
+      }
+    };
+    const pumping = pump();
+    try {
+      const res = await fetch("/api/analyze", request);
+      if (!res.ok || !res.body) { const d = await res.json().catch(() => ({})); throw new Error(d.error || "The server couldn't analyze that."); }
+      const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
+      for (;;) {
+        const { value, done: end } = await reader.read();
+        if (end) break;
+        buf += dec.decode(value, { stream: true });
+        let nl;
+        while ((nl = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+          if (!line) continue;
+          const ev = JSON.parse(line);
+          if (ev.type === "result") result = ev; else if (ev.type === "error") failed = ev.message; else queue.push(ev);
+        }
+      }
+    } catch (err) {
+      failed = err instanceof TypeError ? "Can't reach the local server. Start it with: python -m rdg.server" : err.message;
+    }
+    done = true; await pumping;
+    if (failed || !result) { $("#progress-error").textContent = failed || "No result."; queue.length = 0; setTimeout(() => showIntake(true), 2600); return; }
+    $("#progress-bar").style.width = "100%";
+    ALL[result.id] = result.scenario;
+    setTimeout(() => {
+      showIntake(false);
+      set({ scenario: result.id, state: "before", tab: "alerts", selected: null });
+    }, REDUCED ? 0 : 700);
+  }
+
+  function importText(text, filename) {
+    const input = text.trim();
+    if (!input) return;
+    const doi = (input.match(/10\.\d{4,9}\/[^\s"'<>{}]+/) || [""])[0];
+    runImport({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ input, filename }) }, filename || doi || input);
+  }
+  function importFile(file) {
+    if (!file) return;
+    if (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) {
+      runImport({ method: "POST", headers: { "Content-Type": "application/pdf", "X-Filename": file.name.replace(/[^\w.\- ]/g, "_") }, body: file }, file.name);
+    } else {
+      file.text().then(t => importText(t, file.name)).catch(() => { $("#intake-error").textContent = "Couldn't read that file."; });
+    }
+  }
+  $("#link-form").addEventListener("submit", ev => { ev.preventDefault(); importText($("#link").value); });
+  $("#drop").addEventListener("click", ev => { if (ev.target.id !== "file") $("#file").click(); });
+  $("#drop").addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); $("#file").click(); } });
+  $("#file").addEventListener("change", ev => importFile(ev.target.files[0]));
+  let dragDepth = 0;
+  window.addEventListener("dragenter", ev => { ev.preventDefault(); dragDepth++; if (intake.hidden) showIntake(true); $("#drop").classList.add("over"); });
+  window.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; $("#drop").classList.remove("over"); } });
+  window.addEventListener("dragover", ev => ev.preventDefault());
+  window.addEventListener("drop", ev => {
+    ev.preventDefault(); dragDepth = 0; $("#drop").classList.remove("over");
+    if (!$("#intake-progress").hidden) return;
+    const dt = ev.dataTransfer;
+    if (dt.files && dt.files.length) return importFile(dt.files[0]);
+    const text = dt.getData("text/uri-list") || dt.getData("text/plain");
+    if (text) importText(text);
+  });
+  $("#new-analysis").addEventListener("click", () => showIntake(true));
+  $("#run-analysis").addEventListener("click", runAnalysis);
+  $("#verify-btn").addEventListener("click", runVerify);
+  document.addEventListener("keydown", ev => { if (ev.key === "Escape" && !intake.hidden && $("#intake-progress").hidden) showIntake(false); });
+
+  function render() { D = ALL[ui.scenario]; renderChrome(); renderChat(); renderCanvas(); renderAlerts(); renderDetail(); renderLean(); renderVerify(); }
   const set = patch => { ui = { ...ui, ...patch }; render(); };
 
   document.addEventListener("click", ev => {
     const seg = ev.target.closest(".seg button");
     if (seg) { try { store && store.setItem("rdg.state", seg.dataset.state); } catch {} return set({ state: seg.dataset.state }); }
+    const open = ev.target.closest("[data-open]");
+    if (open) { showIntake(false); return set({ scenario: open.dataset.open, state: "before", selected: null, tab: "alerts" }); }
     const sc = ev.target.closest("[data-scenario]");
-    if (sc) { $("#doi-msg").textContent = ""; return set({ scenario: sc.dataset.scenario, selected: null, tab: "alerts" }); }
+    if (sc) return set({ scenario: sc.dataset.scenario, selected: null, tab: "alerts" });
     const tab = ev.target.closest(".tabs button");
     if (tab) return set({ tab: tab.dataset.tab });
     const ask = ev.target.closest("[data-ask]");
     if (ask) return sendChat(ask.dataset.ask);
+    if (ev.target.closest(".card-title a")) return;
     const hit = ev.target.closest("[data-key].claim, .alert[data-key]");
     if (hit) return set({ selected: hit.dataset.key, tab: "detail" });
   });
@@ -508,16 +809,10 @@ svg.edges path.fadein { opacity: 0; animation: fade 500ms ease forwards; animati
   $("#chat-input").addEventListener("keydown", ev => {
     if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); $("#chat-form").requestSubmit(); }
   });
-  $("#doi-form").addEventListener("submit", ev => {
-    ev.preventDefault();
-    const doi = $("#doi").value.trim().toLowerCase().replace(/^https?:\/\/(dx\.)?doi\.org\//, "").replace(/^doi:/, "");
-    const hit = Object.entries(ALL).find(([, sc]) => sc.rootDoi && sc.rootDoi.toLowerCase() === doi);
-    if (hit) { $("#doi-msg").textContent = ""; set({ scenario: hit[0], state: "before", selected: null, tab: "alerts" }); }
-    else $("#doi-msg").textContent = doi ? "Not in the local dataset. Import it with rdg.snapshot." : "";
-  });
   window.addEventListener("resize", () => requestAnimationFrame(() => drawEdges()));
   if (document.fonts) document.fonts.ready.then(() => requestAnimationFrame(() => drawEdges()));
   render();
+  showIntake(true);
 })();
 </script>
 </body>
